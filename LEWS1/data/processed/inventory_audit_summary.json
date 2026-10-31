@@ -1,0 +1,20 @@
+{
+  "total_global_records": 11033,
+  "india_records": 1265,
+  "records_in_dem_tile": 82,
+  "location_accuracy_breakdown": {
+    "5km": 22,
+    "25km": 17,
+    "1km": 16,
+    "10km": 14,
+    "50km": 8,
+    "exact": 2,
+    "unknown": 2,
+    "100km": 1
+  },
+  "precise_events_le_10km": 54,
+  "precise_events_le_5km": 40,
+  "precise_events_le_1km": 18,
+  "output_table": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\data\\processed\\real_inventory_events_audited.csv",
+  "note": "Dynamic rainfall/soil moisture columns are NOT faked for historical catalog events."
+}

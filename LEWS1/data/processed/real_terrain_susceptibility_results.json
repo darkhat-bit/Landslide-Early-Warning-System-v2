@@ -1,0 +1,150 @@
+{
+  "catalog_source": "NASA Global Landslide Catalog (GLC)",
+  "dem_source": "SRTM 30m DEM (N27E088.hgt)",
+  "spatial_extent": "27.00\u00b0N to 28.00\u00b0N, 88.00\u00b0E to 89.00\u00b0E",
+  "location_accuracy_filter": "<= 5 km (exact, 1km, 5km)",
+  "real_event_count": 40,
+  "background_sampling_protocol": {
+    "geographic_area": "DEM Tile N27E088 [27.02-27.98\u00b0N, 88.02-88.98\u00b0E] (~10,000 km\u00b2)",
+    "count": 40,
+    "exclusion_buffer_m": 1000.0,
+    "elevation_constraint": "Matched to event range [229.8 m, 3760.2 m]",
+    "event_elevation": {
+      "min": 229.81500244140625,
+      "median": 1514.1948852539062,
+      "max": 3760.208984375
+    },
+    "unconstrained_background_elevation": {
+      "min": 499.90814208984375,
+      "median": 3328.067626953125,
+      "max": 6265.5185546875
+    },
+    "resampled_matched_elevation": {
+      "min": 392.1837158203125,
+      "median": 1607.9459228515625,
+      "max": 3728.70361328125
+    }
+  },
+  "validation_strategy": "Spatial 5-Fold GroupKFold on 15km blocks",
+  "features_evaluated": [
+    "elevation_m",
+    "slope_deg",
+    "aspect_deg",
+    "curvature"
+  ],
+  "models": {
+    "Random Forest": {
+      "mean_cv_auc": 0.6594372294372295,
+      "overall_cv_auc": 0.5787500000000001,
+      "bootstrap_95_ci": [
+        0.4583,
+        0.7077
+      ],
+      "fold_aucs": [
+        0.5873,
+        0.9273,
+        0.75,
+        0.6508,
+        0.3818
+      ],
+      "standard_threshold_0.50": {
+        "precision": 0.5757575757575758,
+        "recall": 0.475,
+        "f1": 0.5205479452054794,
+        "accuracy": 0.5625,
+        "confusion_tn_fp_fn_tp": [
+          26,
+          14,
+          21,
+          19
+        ]
+      },
+      "tuned_threshold_for_recall_85": {
+        "threshold": 0.395,
+        "recall": 0.85,
+        "precision": 0.5667,
+        "f1": 0.68
+      }
+    },
+    "XGBoost": {
+      "mean_cv_auc": 0.511156204906205,
+      "overall_cv_auc": 0.49625,
+      "bootstrap_95_ci": [
+        0.3721,
+        0.6268
+      ],
+      "fold_aucs": [
+        0.619,
+        0.4,
+        0.5312,
+        0.5873,
+        0.4182
+      ],
+      "standard_threshold_0.50": {
+        "precision": 0.5757575757575758,
+        "recall": 0.475,
+        "f1": 0.5205479452054794,
+        "accuracy": 0.5625,
+        "confusion_tn_fp_fn_tp": [
+          26,
+          14,
+          21,
+          19
+        ]
+      },
+      "tuned_threshold_for_recall_85": {
+        "threshold": 0.235,
+        "recall": 0.85,
+        "precision": 0.4857,
+        "f1": 0.6182
+      }
+    },
+    "Logistic Regression": {
+      "mean_cv_auc": 0.49256313131313123,
+      "overall_cv_auc": 0.473125,
+      "bootstrap_95_ci": [
+        0.3409,
+        0.6004
+      ],
+      "fold_aucs": [
+        0.6825,
+        0.6,
+        0.4062,
+        0.4286,
+        0.3455
+      ],
+      "standard_threshold_0.50": {
+        "precision": 0.48717948717948717,
+        "recall": 0.475,
+        "f1": 0.4810126582278481,
+        "accuracy": 0.4875,
+        "confusion_tn_fp_fn_tp": [
+          20,
+          20,
+          21,
+          19
+        ]
+      },
+      "tuned_threshold_for_recall_85": {
+        "threshold": 0.38,
+        "recall": 0.85,
+        "precision": 0.5484,
+        "f1": 0.6667
+      }
+    },
+    "feature_importances": {
+      "Random Forest": {
+        "elevation_m": 0.3203,
+        "slope_deg": 0.2202,
+        "aspect_deg": 0.1947,
+        "curvature": 0.2648
+      },
+      "XGBoost": {
+        "elevation_m": 0.3075,
+        "slope_deg": 0.1314,
+        "aspect_deg": 0.2372,
+        "curvature": 0.3239
+      }
+    }
+  }
+}

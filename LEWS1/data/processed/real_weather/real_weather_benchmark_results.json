@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "title": "Real Weather (Reanalysis) + SRTM DEM Susceptibility Benchmark",
+    "note": "Real weather (reanalysis), small sample, exploratory.",
+    "weather_source": "Open-Meteo Historical Archive API (ERA5-Land reanalysis, ~9-11 km grid)",
+    "inventory_source": "NASA Global Landslide Catalog (GLC) events with location accuracy <= 5 km",
+    "terrain_source": "NASA SRTM 30m DEM (N27E088.hgt)",
+    "n_events_used": 40,
+    "n_background_used": 40,
+    "n_total_samples": 80,
+    "spatial_cv_folds": 5,
+    "spatial_block_size_km": 15,
+    "ndvi_status": "not available (skipped)",
+    "limitations": [
+      "Small sample size: exactly 40 real events with <=5 km error exist in the study area.",
+      "Coarse reanalysis grid: Open-Meteo ERA5-Land reanalysis provides ~9-11 km spatial resolution, unable to capture steep micro-catchment convective bursts.",
+      "No values invented: all weather values are directly queried from reanalysis archives."
+    ]
+  },
+  "weather_statistics": {
+    "events": {
+      "rain_24h_mm": {
+        "min": 0.0,
+        "mean": 37.75750000000001,
+        "median": 19.049999999999997,
+        "max": 172.7
+      },
+      "rain_7d_mm": {
+        "min": 11.0,
+        "mean": 209.2225,
+        "median": 178.75,
+        "max": 621.8
+      },
+      "soil_moisture_pct": {
+        "min": 33.4,
+        "mean": 41.754999999999995,
+        "median": 42.3,
+        "max": 43.4
+      }
+    },
+    "background": {
+      "rain_24h_mm": {
+        "min": 0.0,
+        "mean": 9.0275,
+        "median": 4.85,
+        "max": 90.0
+      },
+      "rain_7d_mm": {
+        "min": 0.2,
+        "mean": 58.022499999999994,
+        "median": 43.75,
+        "max": 311.6
+      },
+      "soil_moisture_pct": {
+        "min": 21.4,
+        "mean": 39.010000000000005,
+        "median": 40.75,
+        "max": 42.699999999999996
+      }
+    }
+  },
+  "models": {
+    "Terrain_Only": {
+      "random_forest": {
+        "overall_spatial_auc": 0.55,
+        "bootstrap_95_ci": [
+          0.4242360743546484,
+          0.6688713017299346
+        ],
+        "mean_fold_auc": 0.5859361471861472,
+        "recall_50": 0.45,
+        "precision_50": 0.5,
+        "tuned_threshold_rec85": 0.2956281407035176,
+        "recall_at_tuned": 0.85,
+        "precision_at_tuned": 0.53125,
+        "confusion_matrix_50": [
+          [
+            22,
+            18
+          ],
+          [
+            22,
+            18
+          ]
+        ]
+      },
+      "logistic_regression": {
+        "overall_spatial_auc": 0.494375,
+        "bootstrap_95_ci": [
+          0.36715854503683454,
+          0.6291797611565052
+        ],
+        "mean_fold_auc": 0.4821158008658009,
+        "recall_50": 0.55,
+        "precision_50": 0.5238095238095238,
+        "tuned_threshold_rec85": 0.3941206030150754,
+        "recall_at_tuned": 0.85,
+        "precision_at_tuned": 0.5483870967741935,
+        "confusion_matrix_50": [
+          [
+            20,
+            20
+          ],
+          [
+            18,
+            22
+          ]
+        ]
+      }
+    },
+    "Terrain_Plus_Real_Weather": {
+      "random_forest": {
+        "overall_spatial_auc": 0.8025,
+        "bootstrap_95_ci": [
+          0.6913754523044479,
+          0.9070172989485649
+        ],
+        "mean_fold_auc": 0.8338528138528138,
+        "recall_50": 0.8,
+        "precision_50": 0.8,
+        "tuned_threshold_rec85": 0.32517587939698495,
+        "recall_at_tuned": 0.85,
+        "precision_at_tuned": 0.68,
+        "confusion_matrix_50": [
+          [
+            32,
+            8
+          ],
+          [
+            8,
+            32
+          ]
+        ]
+      },
+      "logistic_regression": {
+        "overall_spatial_auc": 0.8356250000000001,
+        "bootstrap_95_ci": [
+          0.7248277910692207,
+          0.927125959079284
+        ],
+        "mean_fold_auc": 0.8329004329004329,
+        "recall_50": 0.75,
+        "precision_50": 0.8108108108108109,
+        "tuned_threshold_rec85": 0.2660804020100503,
+        "recall_at_tuned": 0.85,
+        "precision_at_tuned": 0.6181818181818182,
+        "confusion_matrix_50": [
+          [
+            33,
+            7
+          ],
+          [
+            10,
+            30
+          ]
+        ]
+      }
+    }
+  },
+  "comparison_summary": {
+    "random_forest_auc_change": {
+      "terrain_only": 0.55,
+      "terrain_plus_real_weather": 0.8025,
+      "delta": 0.25249999999999995
+    },
+    "logistic_regression_auc_change": {
+      "terrain_only": 0.494375,
+      "terrain_plus_real_weather": 0.8356250000000001,
+      "delta": 0.34125000000000005
+    }
+  }
+}

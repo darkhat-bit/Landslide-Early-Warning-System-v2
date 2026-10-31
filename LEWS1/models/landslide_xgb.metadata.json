@@ -1,0 +1,177 @@
+{
+  "training_source": "synthetic_simulation_benchmark",
+  "primary_model_type": "RandomForestClassifier",
+  "performance_status": "synthetic_pipeline_verification_with_dem_terrain",
+  "dataset_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\data\\dataset.csv",
+  "trained_at_utc": "2026-10-27T09:26:27.840691+00:00",
+  "split_method": "3way_group_holdout:spatial_group",
+  "random_seed": 42,
+  "feature_columns": [
+    "elevation_m",
+    "slope_deg",
+    "aspect_deg",
+    "curvature",
+    "dist_to_road_m",
+    "dist_to_river_m",
+    "rain_24h_mm",
+    "rain_3d_mm",
+    "rain_7d_mm",
+    "soil_moisture_pct",
+    "ndvi"
+  ],
+  "n_features": 11,
+  "feature_importances": {
+    "elevation_m": 0.05336002381893551,
+    "slope_deg": 0.22130754691151203,
+    "aspect_deg": 0.06049978723622713,
+    "curvature": 0.06242211911201015,
+    "dist_to_road_m": 0.0685649355657748,
+    "dist_to_river_m": 0.05851206873735641,
+    "rain_24h_mm": 0.14008082291481258,
+    "rain_3d_mm": 0.1267376650801214,
+    "rain_7d_mm": 0.08047152800646395,
+    "soil_moisture_pct": 0.06927596217619032,
+    "ndvi": 0.05876754044059576
+  },
+  "train_rows": 900,
+  "val_rows": 297,
+  "test_rows": 303,
+  "train_positive_count": 173,
+  "val_positive_count": 62,
+  "test_positive_count": 65,
+  "scale_pos_weight": 4.202312138728324,
+  "threshold_tuning_method": "Threshold tuned strictly on the separate Validation split to achieve val_recall >= 85%. Reported recall and precision are evaluated on the untouched Test split.",
+  "comparison_on_untouched_test": {
+    "xgboost": {
+      "roc_auc": 0.7421460892049128,
+      "threshold_0.50": {
+        "threshold": 0.5,
+        "precision": 0.5471698113207547,
+        "recall": 0.4461538461538462,
+        "f1": 0.4915254237288136,
+        "roc_auc": 0.7421460892049128,
+        "confusion_matrix_tn_fp_fn_tp": [
+          214,
+          24,
+          36,
+          29
+        ],
+        "positive_count": 65,
+        "negative_count": 238
+      },
+      "validation_tuned_threshold": {
+        "threshold": 0.03,
+        "precision": 0.2744186046511628,
+        "recall": 0.9076923076923077,
+        "f1": 0.42142857142857143,
+        "roc_auc": 0.7421460892049128,
+        "confusion_matrix_tn_fp_fn_tp": [
+          82,
+          156,
+          6,
+          59
+        ],
+        "positive_count": 65,
+        "negative_count": 238
+      }
+    },
+    "random_forest": {
+      "roc_auc": 0.7641887524240466,
+      "threshold_0.50": {
+        "threshold": 0.5,
+        "precision": 0.5714285714285714,
+        "recall": 0.49230769230769234,
+        "f1": 0.5289256198347108,
+        "roc_auc": 0.7641887524240466,
+        "confusion_matrix_tn_fp_fn_tp": [
+          214,
+          24,
+          33,
+          32
+        ],
+        "positive_count": 65,
+        "negative_count": 238
+      },
+      "validation_tuned_threshold": {
+        "threshold": 0.25,
+        "precision": 0.27102803738317754,
+        "recall": 0.8923076923076924,
+        "f1": 0.4157706093189964,
+        "roc_auc": 0.7641887524240466,
+        "confusion_matrix_tn_fp_fn_tp": [
+          82,
+          156,
+          7,
+          58
+        ],
+        "positive_count": 65,
+        "negative_count": 238
+      }
+    },
+    "primary_selected": "RandomForestClassifier",
+    "decision_rationale": "Random Forest achieved higher ROC-AUC (0.7642 vs 0.7421) and higher F1 at 0.50 on the untouched spatial holdout test split."
+  },
+  "xgb_metrics": {
+    "threshold": 0.5,
+    "precision": 0.5471698113207547,
+    "recall": 0.4461538461538462,
+    "f1": 0.4915254237288136,
+    "roc_auc": 0.7421460892049128,
+    "confusion_matrix_tn_fp_fn_tp": [
+      214,
+      24,
+      36,
+      29
+    ],
+    "positive_count": 65,
+    "negative_count": 238
+  },
+  "rf_baseline_metrics": {
+    "threshold": 0.5,
+    "precision": 0.5714285714285714,
+    "recall": 0.49230769230769234,
+    "f1": 0.5289256198347108,
+    "roc_auc": 0.7641887524240466,
+    "confusion_matrix_tn_fp_fn_tp": [
+      214,
+      24,
+      33,
+      32
+    ],
+    "positive_count": 65,
+    "negative_count": 238
+  },
+  "primary_metrics_50": {
+    "threshold": 0.5,
+    "precision": 0.5714285714285714,
+    "recall": 0.49230769230769234,
+    "f1": 0.5289256198347108,
+    "roc_auc": 0.7641887524240466,
+    "confusion_matrix_tn_fp_fn_tp": [
+      214,
+      24,
+      33,
+      32
+    ],
+    "positive_count": 65,
+    "negative_count": 238
+  },
+  "primary_metrics_tuned": {
+    "threshold": 0.25,
+    "precision": 0.27102803738317754,
+    "recall": 0.8923076923076924,
+    "f1": 0.4157706093189964,
+    "roc_auc": 0.7641887524240466,
+    "confusion_matrix_tn_fp_fn_tp": [
+      82,
+      156,
+      7,
+      58
+    ],
+    "positive_count": 65,
+    "negative_count": 238
+  },
+  "model_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\models\\landslide_primary.joblib",
+  "scaler_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\models\\scaler.joblib",
+  "disclaimer": "CRITICAL NOTE: Model trained on synthetic simulation dataset with DEM terrain. Accuracy/Recall numbers reflect software pipeline verification only and MUST NOT be interpreted as real-world landslide prediction performance."
+}
