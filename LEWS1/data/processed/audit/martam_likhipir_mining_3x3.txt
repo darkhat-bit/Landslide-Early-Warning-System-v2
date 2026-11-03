@@ -1,0 +1,91 @@
+================================================================================
+3x3 DEM NEIGHBORHOOD AUDIT (Martam Ridge, Likhipir, Mining Ground)
+Extracted using src.geospatial_pipeline._terrain_grid from N27E088.hgt
+================================================================================
+
+Station: Martam Ridge Cutting (pt-9)
+GPS Coordinates: Latitude = 27.2685°N, Longitude = 88.5412°E
+Projected Coordinates (UTM 45N): X = 652556.36 m, Y = 3017114.86 m
+DEM Grid Cell Index: row = 2723, col = 1808
+Center Cell Values: Elevation = 1397.1 m, Slope = 39.9°, Aspect = 119.1°, Curvature = 1.3673 100/m
+
+3x3 Elevation Grid (m):
+[[1419.4 1405.9 1382.6]
+ [1414.2 1397.1 1370.3]
+ [1402.6 1381.5 1354.2]]
+
+3x3 Slope Grid (degrees):
+[[19.7 32.8 39.4]
+ [26.  39.9 43.7]
+ [35.1 45.  43.5]]
+3x3 Slope Summary: Min = 19.7°, Max = 45.0°, Mean = 36.1°
+
+3x3 Aspect Grid (degrees):
+[[105.5 108.3 113.6]
+ [125.2 119.1 119.8]
+ [136.2 126.3 122.7]]
+
+3x3 Curvature Grid (100/m):
+[[ 1.0935  1.2112  0.3636]
+ [ 1.5648  1.3673  0.1201]
+ [ 1.7045  0.787  -0.531 ]]
+3x3 Curvature Summary: Min = -0.5310, Max = 1.7045, Mean = 0.8534
+--------------------------------------------------------------------------------
+
+Station: Likhipir Hairpin Bend (pt-3)
+GPS Coordinates: Latitude = 27.0894°N, Longitude = 88.4528°E
+Projected Coordinates (UTM 45N): X = 644034.76 m, Y = 2997168.86 m
+DEM Grid Cell Index: row = 3388, col = 1524
+Center Cell Values: Elevation = 354.6 m, Slope = 34.3°, Aspect = 162.9°, Curvature = 0.6774 100/m
+
+3x3 Elevation Grid (m):
+[[371.2 370.3 368.1]
+ [358.9 354.6 346.9]
+ [338.7 331.3 324.4]]
+
+3x3 Slope Grid (degrees):
+[[21.1 24.2 32.4]
+ [28.7 34.3 38.6]
+ [31.  32.8 35.6]]
+3x3 Slope Summary: Min = 21.1°, Max = 38.6°, Mean = 31.0°
+
+3x3 Aspect Grid (degrees):
+[[167.1 173.4 161.8]
+ [172.1 162.9 155.8]
+ [157.5 158.4 155.8]]
+
+3x3 Curvature Grid (100/m):
+[[-0.0658  0.5066  1.0273]
+ [ 0.4998  0.6774  0.4242]
+ [-0.1722 -0.32   -0.1884]]
+3x3 Curvature Summary: Min = -0.3200, Max = 1.0273, Mean = 0.2654
+--------------------------------------------------------------------------------
+
+Station: Mining Ground Slip Sector (pt-7)
+GPS Coordinates: Latitude = 27.2052°N, Longitude = 88.5089°E
+Projected Coordinates (UTM 45N): X = 649443.23 m, Y = 3010063.14 m
+DEM Grid Cell Index: row = 2958, col = 1704
+Center Cell Values: Elevation = 749.0 m, Slope = 33.2°, Aspect = 296.0°, Curvature = -1.3266 100/m
+
+3x3 Elevation Grid (m):
+[[741.2 745.1 757.9]
+ [733.7 749.  768.9]
+ [737.9 762.4 784.5]]
+
+3x3 Slope Grid (degrees):
+[[17.3 15.8 31.9]
+ [20.  33.2 42. ]
+ [37.  40.1 40.9]]
+3x3 Slope Summary: Min = 15.8°, Max = 42.0°, Mean = 30.9°
+
+3x3 Aspect Grid (degrees):
+[[195.8 260.6 284.4]
+ [261.3 296.  299.4]
+ [283.7 292.6 299. ]]
+
+3x3 Curvature Grid (100/m):
+[[-1.0873 -1.9857 -1.78  ]
+ [-1.5091 -1.3266 -0.758 ]
+ [-0.8273  0.2712  0.6523]]
+3x3 Curvature Summary: Min = -1.9857, Max = 0.6523, Mean = -0.9278
+--------------------------------------------------------------------------------

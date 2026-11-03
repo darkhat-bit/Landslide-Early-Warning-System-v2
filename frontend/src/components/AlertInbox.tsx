@@ -1,3 +1,4 @@
+import { isBorderlineScore } from '../data/trainingRanges';
 import React, { useState } from 'react';
 import {
   AlertTriangle,
@@ -242,7 +243,17 @@ export const AlertInbox: React.FC<AlertInboxProps> = ({
             {/* Risk score explanation */}
             <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Calculated risk score:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-600">Calculated risk score:</span>
+                  {isBorderlineScore(selectedAlert.modelScore) && (
+                    <span
+                      className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-300"
+                      title="Score is close to a tier boundary, so the tier can change with small input changes."
+                    >
+                      Borderline
+                    </span>
+                  )}
+                </div>
                 <span className="font-semibold text-gray-900">{selectedAlert.modelScore.toFixed(4)}</span>
               </div>
               <div className="text-[11px] text-gray-500">
@@ -312,17 +323,28 @@ export const AlertInbox: React.FC<AlertInboxProps> = ({
                           </td>
                           <td className="py-1.5 px-1 font-semibold text-gray-900 whitespace-nowrap">{f.value}</td>
                           <td className="py-1.5 px-1 whitespace-nowrap">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-                                f.sourceTag === 'From terrain data'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : f.sourceTag === 'Approximate'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-gray-100 text-gray-700 border-gray-200'
-                              }`}
-                            >
-                              {f.sourceTag}
-                            </span>
+                            <div className="space-y-1">
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium border inline-block ${
+                                  f.sourceTag === 'From terrain data (DEM)'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : f.sourceTag === 'Approximate (hand-estimated)'
+                                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                    : f.sourceTag === 'Live weather model'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : f.sourceTag === 'Simulated scenario'
+                                    ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                }`}
+                              >
+                                {f.sourceTag}
+                              </span>
+                              {!f.isWithinRange && (
+                                <div className="text-[10px] text-amber-700 font-medium">
+                                  Outside training range, less reliable
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -444,9 +466,17 @@ export const AlertInbox: React.FC<AlertInboxProps> = ({
                     </div>
 
                     <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500">
-                      <span>
-                        Risk score: <span className="font-semibold text-gray-700">{alert.modelScore.toFixed(4)}</span>{' '}
-                        (not a true probability)
+                      <span className="flex items-center gap-1.5">
+                        <span>Risk score: <span className="font-semibold text-gray-700">{alert.modelScore.toFixed(4)}</span></span>
+                        {isBorderlineScore(alert.modelScore) && (
+                          <span
+                            className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-purple-100 text-purple-800 border border-purple-300"
+                            title="Score is close to a tier boundary, so the tier can change with small input changes."
+                          >
+                            Borderline
+                          </span>
+                        )}
+                        <span>(not a true probability)</span>
                       </span>
                       <span className="text-blue-600 hover:underline font-medium">Details →</span>
                     </div>

@@ -89,3 +89,20 @@ desktop.ini
 *.dmg
 *.pkg
 
+# ==========================================
+# Large Terrain Caches & Local Logs
+# ==========================================
+*.npz
+dem_terrain_cache.npz
+simulated_email_log.jsonl
+user_reports.jsonl
+
+# ==========================================
+# Temporary Screenshots & Raw Audit Dumps
+# ==========================================
+/*.png
+LEWS1/data/processed/audit/*.json
+
+
+
+

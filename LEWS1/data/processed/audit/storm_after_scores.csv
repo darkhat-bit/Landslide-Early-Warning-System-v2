@@ -1,0 +1,76 @@
+station_id,station_name,rain_delta_mm,failure_probability,risk_tier,rain_24h_adjusted_mm,rain_3d_adjusted_mm,rain_7d_adjusted_mm,soil_moisture_adjusted_pct
+pt-1,29th Mile Landslide Zone,0,0.4295,YELLOW,45.0,95.0,145.0,70.0
+pt-2,Teesta Bazaar Crossing,0,0.1363,GREEN,35.0,75.0,115.0,58.0
+pt-3,Likhipir Hairpin Bend,0,0.5592,YELLOW,48.0,102.0,155.0,66.0
+pt-4,Tarkhola Vulnerable Sector,0,0.344,YELLOW,42.0,90.0,138.0,64.0
+pt-5,Melli Gateway Bridge,0,0.2835,YELLOW,32.0,68.0,105.0,50.0
+pt-6,Rangpo Entry Checkpost,0,0.1312,GREEN,36.0,78.0,120.0,56.0
+pt-7,Mining Ground Slip Sector,0,0.5479,YELLOW,50.0,108.0,165.0,68.0
+pt-8,Singtam Valley Hub,0,0.3824,YELLOW,28.0,60.0,95.0,46.0
+pt-9,Martam Ridge Cutting,0,0.5502,YELLOW,52.0,115.0,175.0,72.0
+pt-10,Ranipool Bridge Corridor,0,0.2587,YELLOW,38.0,82.0,125.0,58.0
+pt-11,Tadong Mile 6 Escarpment,0,0.4916,YELLOW,46.0,98.0,150.0,65.0
+pt-12,Deorali Ridge Slide Zone,0,0.2544,YELLOW,44.0,94.0,142.0,62.0
+pt-13,Gangtok Zero Point Ridge,0,0.265,YELLOW,30.0,66.0,100.0,48.0
+pt-14,Penlong La Escarpment,0,0.2453,GREEN,40.0,86.0,130.0,58.0
+pt-15,Dikchu River Corridor,0,0.3997,YELLOW,48.0,105.0,160.0,66.0
+pt-1,29th Mile Landslide Zone,50,0.7701,RED,95.0,155.0,215.0,75.0
+pt-2,Teesta Bazaar Crossing,50,0.1787,GREEN,85.0,135.0,185.0,63.0
+pt-3,Likhipir Hairpin Bend,50,0.8008,RED,98.0,162.0,225.0,71.0
+pt-4,Tarkhola Vulnerable Sector,50,0.5824,YELLOW,92.0,150.0,208.0,69.0
+pt-5,Melli Gateway Bridge,50,0.8362,RED,82.0,128.0,175.0,55.0
+pt-6,Rangpo Entry Checkpost,50,0.1583,GREEN,86.0,138.0,190.0,61.0
+pt-7,Mining Ground Slip Sector,50,0.8233,RED,100.0,168.0,235.0,73.0
+pt-8,Singtam Valley Hub,50,0.7646,RED,78.0,120.0,165.0,51.0
+pt-9,Martam Ridge Cutting,50,0.7986,RED,102.0,175.0,245.0,77.0
+pt-10,Ranipool Bridge Corridor,50,0.4207,YELLOW,88.0,142.0,195.0,63.0
+pt-11,Tadong Mile 6 Escarpment,50,0.7159,RED,96.0,158.0,220.0,70.0
+pt-12,Deorali Ridge Slide Zone,50,0.4975,YELLOW,94.0,154.0,212.0,67.0
+pt-13,Gangtok Zero Point Ridge,50,0.5435,YELLOW,80.0,126.0,170.0,53.0
+pt-14,Penlong La Escarpment,50,0.5125,YELLOW,90.0,146.0,200.0,63.0
+pt-15,Dikchu River Corridor,50,0.6162,YELLOW,98.0,165.0,230.0,71.0
+pt-1,29th Mile Landslide Zone,100,0.7181,RED,145.0,215.0,285.0,80.0
+pt-2,Teesta Bazaar Crossing,100,0.1946,GREEN,135.0,195.0,255.0,68.0
+pt-3,Likhipir Hairpin Bend,100,0.7609,RED,148.0,222.0,295.0,76.0
+pt-4,Tarkhola Vulnerable Sector,100,0.5469,YELLOW,142.0,210.0,278.0,74.0
+pt-5,Melli Gateway Bridge,100,0.8246,RED,132.0,188.0,245.0,60.0
+pt-6,Rangpo Entry Checkpost,100,0.1764,GREEN,136.0,198.0,260.0,66.0
+pt-7,Mining Ground Slip Sector,100,0.7863,RED,150.0,228.0,305.0,78.0
+pt-8,Singtam Valley Hub,100,0.827,RED,128.0,180.0,235.0,56.0
+pt-9,Martam Ridge Cutting,100,0.7538,RED,152.0,235.0,315.0,82.0
+pt-10,Ranipool Bridge Corridor,100,0.4517,YELLOW,138.0,202.0,265.0,68.0
+pt-11,Tadong Mile 6 Escarpment,100,0.6623,YELLOW,146.0,218.0,290.0,75.0
+pt-12,Deorali Ridge Slide Zone,100,0.4823,YELLOW,144.0,214.0,282.0,72.0
+pt-13,Gangtok Zero Point Ridge,100,0.6008,YELLOW,130.0,186.0,240.0,58.0
+pt-14,Penlong La Escarpment,100,0.5012,YELLOW,140.0,206.0,270.0,68.0
+pt-15,Dikchu River Corridor,100,0.6019,YELLOW,148.0,225.0,300.0,76.0
+pt-1,29th Mile Landslide Zone,200,0.7089,RED,245.0,335.0,425.0,90.0
+pt-2,Teesta Bazaar Crossing,200,0.2196,GREEN,235.0,315.0,395.0,78.0
+pt-3,Likhipir Hairpin Bend,200,0.7462,RED,248.0,342.0,435.0,86.0
+pt-4,Tarkhola Vulnerable Sector,200,0.5512,YELLOW,242.0,330.0,418.0,84.0
+pt-5,Melli Gateway Bridge,200,0.7693,RED,232.0,308.0,385.0,70.0
+pt-6,Rangpo Entry Checkpost,200,0.2014,GREEN,236.0,318.0,400.0,76.0
+pt-7,Mining Ground Slip Sector,200,0.7616,RED,250.0,348.0,445.0,88.0
+pt-8,Singtam Valley Hub,200,0.7672,RED,228.0,300.0,375.0,66.0
+pt-9,Martam Ridge Cutting,200,0.7358,RED,252.0,355.0,455.0,92.0
+pt-10,Ranipool Bridge Corridor,200,0.4663,YELLOW,238.0,322.0,405.0,78.0
+pt-11,Tadong Mile 6 Escarpment,200,0.6536,YELLOW,246.0,338.0,430.0,85.0
+pt-12,Deorali Ridge Slide Zone,200,0.4828,YELLOW,244.0,334.0,422.0,82.0
+pt-13,Gangtok Zero Point Ridge,200,0.5656,YELLOW,230.0,306.0,380.0,68.0
+pt-14,Penlong La Escarpment,200,0.5117,YELLOW,240.0,326.0,410.0,78.0
+pt-15,Dikchu River Corridor,200,0.5909,YELLOW,248.0,345.0,440.0,86.0
+pt-1,29th Mile Landslide Zone,300,0.7089,RED,345.0,455.0,565.0,98.0
+pt-2,Teesta Bazaar Crossing,300,0.2103,GREEN,335.0,435.0,535.0,88.0
+pt-3,Likhipir Hairpin Bend,300,0.7462,RED,348.0,462.0,575.0,96.0
+pt-4,Tarkhola Vulnerable Sector,300,0.547,YELLOW,342.0,450.0,558.0,94.0
+pt-5,Melli Gateway Bridge,300,0.7591,RED,332.0,428.0,525.0,80.0
+pt-6,Rangpo Entry Checkpost,300,0.2022,GREEN,336.0,438.0,540.0,86.0
+pt-7,Mining Ground Slip Sector,300,0.7616,RED,350.0,468.0,585.0,98.0
+pt-8,Singtam Valley Hub,300,0.7525,RED,328.0,420.0,515.0,76.0
+pt-9,Martam Ridge Cutting,300,0.7358,RED,352.0,475.0,595.0,98.0
+pt-10,Ranipool Bridge Corridor,300,0.4571,YELLOW,338.0,442.0,545.0,88.0
+pt-11,Tadong Mile 6 Escarpment,300,0.6447,YELLOW,346.0,458.0,570.0,95.0
+pt-12,Deorali Ridge Slide Zone,300,0.4739,YELLOW,344.0,454.0,562.0,92.0
+pt-13,Gangtok Zero Point Ridge,300,0.5703,YELLOW,330.0,426.0,520.0,78.0
+pt-14,Penlong La Escarpment,300,0.4977,YELLOW,340.0,446.0,550.0,88.0
+pt-15,Dikchu River Corridor,300,0.5909,YELLOW,348.0,465.0,580.0,96.0

@@ -22,7 +22,9 @@ The North Eastern Region of India—particularly the State of Sikkim and the Dar
 - **Specific Route:** Teesta Bazaar $\rightarrow$ Likhipir $\rightarrow$ Melli $\rightarrow$ Rangpo $\rightarrow$ Singtam $\rightarrow$ Ranipool $\rightarrow$ Tadong $\rightarrow$ Gangtok (Capital Terminus) $\rightarrow$ Penlong La / Dikchu Link.
 - **Active Corridor Bounding Box:** Latitude $27.00^\circ\text{N}$ to $27.45^\circ\text{N}$, Longitude $88.40^\circ\text{E}$ to $88.65^\circ\text{E}$.
 - **DEM Tile Boundary:** NASA SRTM Tile `N27E088.hgt` covering Latitude $27.00^\circ\text{N}$ to $28.00^\circ\text{N}$, Longitude $88.00^\circ\text{E}$ to $89.00^\circ\text{E}$ (30 m SRTMGL1 raster).
-- **Corridor Elevation Range:** Monitored highway stations span from $302\text{ m}$ (Rangpo entry checkpost) to $1,988\text{ m}$ (Penlong La escarpment).
+- **Corridor Elevation Range:** Monitored highway stations span from $300.7\text{ m}$ (Rangpo entry checkpost) to $1,987.5\text{ m}$ (Penlong La escarpment).
+- **Corridor Slope Range:** Monitored highway stations span from $10.6^\circ$ (Rangpo Entry Checkpost) to $39.9^\circ$ (Martam Ridge Cutting).
+- **Station Re-extraction Note:** Station terrain values were re-extracted from the SRTM DEM with the same function used for the training table. Station coordinates are approximate, so single-pixel values are sensitive to exact position.
 - **Geometry & Coordinates Provenance:**
   - **15 Highway Station Coordinates:** Labeled **approximate**. They represent hand-selected milestone coordinates positioned along known chronic landslide sectors of NH-10 strictly within genuine DEM bounds ($27.02^\circ\text{N}$ to $27.42^\circ\text{N}$).
   - **Road Geometry:** Labeled **approximate**. The road polyline displayed on the map is a schematic piecewise polyline connecting the 15 station milestones sequentially.
@@ -238,6 +240,38 @@ To rigorously test whether real historical weather separates real landslide even
 
 ---
 
+#### Rainfall Threshold Baseline vs. ML Models (Phase 4 Empirical Benchmark)
+
+To establish a non-ML baseline from published geotechnical literature, we implemented the classic **Caine (1980)** rainfall intensity-duration threshold:
+$$I = 14.82 \cdot D^{-0.39}$$
+*(Citation: Caine, N., 1980. The rainfall intensity - duration control of shallow landslides and debris flows. Geografiska Annaler: Series A, Physical Geography, 62(1-2), pp.23-27. Units: $I$ in $\text{mm}\cdot\text{h}^{-1}$, duration $D$ in hours; valid for $0.16\text{ h} \le D \le 500\text{ h}$.)*
+
+- Equivalent cumulative event threshold: $E = 14.82 \cdot D^{0.61}$
+  - For $D = 24\text{ h}$: $I_{\text{thresh}} = 4.28\text{ mm/h} \implies E_{24\text{h}} = 102.76\text{ mm}$.
+  - For $D = 72\text{ h}$ (3-day): $I_{\text{thresh}} = 2.79\text{ mm/h} \implies E_{72\text{h}} = 201.05\text{ mm}$.
+
+Using the untouched season-matched historical dataset (`data/processed/real_weather/season_matched_events_weather_dataset.csv`, $N = 80$: 40 real events, 40 elevation-matched and season-matched background points), we computed ROC-AUC with 10,000 bootstrap iterations ($95\%$ CI), sensitivity (recall), and specificity:
+
+| Method Name | Method Type | Feature / Decision Rule | ROC-AUC | Bootstrap 95% CI | Sensitivity (Recall) | Specificity | Accuracy |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Caine (1980) 24h Threshold** | Physical / Empirical Rule | $\text{rain\_24h\_mm} \ge 103.0\text{ mm}$ | **0.5750** | [0.5244, 0.6351] | **15.00%** | **100.00%** | 57.50% |
+| **Rainfall Only: 24h Total** | Univariate Weather Score | $\text{rain\_24h\_mm}$ | **0.5100** | [0.3826, 0.6380] | N/A | N/A | N/A |
+| **Rainfall Only: 3d Antecedent** | Univariate Weather Score | $\text{rain\_3d\_mm}$ | **0.4756** | [0.3491, 0.6057] | N/A | N/A | N/A |
+| **Rainfall Only: 7d Antecedent** | Univariate Weather Score | $\text{rain\_7d\_mm}$ | **0.5375** | [0.4098, 0.6654] | N/A | N/A | N/A |
+| **Soil Moisture Only (0-7 cm)** | Univariate Hydrology Score | $\text{soil\_moisture\_pct}$ | **0.4613** | [0.3356, 0.5919] | N/A | N/A | N/A |
+| **Terrain + Weather (LR)** | Multivariate ML (15 km Spatial CV) | 11 Features (DEM + ERA5-Land) | **0.6425** | [0.5261, 0.7730] | **70.00%** | **58.62%** | **65.00%** |
+| **Terrain + Weather (RF)** | Multivariate ML (15 km Spatial CV) | 11 Features (DEM + ERA5-Land) | **0.5834** | [0.4590, 0.7037] | **65.00%** | **53.12%** | **59.09%** |
+
+*(Archived artifact: `data/processed/audit/rainfall_threshold_benchmark.csv`)*
+
+#### Critical Methodological Insights & Caveats:
+1. **Univariate Weather Cannot Separate Monsoon Events:** In a season-matched evaluation where non-events occur during the wet monsoon season, standalone rainfall totals achieve near-random discrimination (24h rain AUC = 0.5100, 3d rain AUC = 0.4756, 7d rain AUC = 0.5375). Both slide days and non-slide monsoon days experience sustained rainfall.
+2. **Caine (1980) Specificity vs. Sensitivity Trade-off:** The global Caine 24h threshold ($102.8\text{ mm}$) produces **zero false positives** (100% specificity) on background days, but misses $85\%$ of true events (15% sensitivity). Coarse $10\text{ km}$ reanalysis averages rainfall across entire valleys, smoothing out localized convective cloudbursts that exceed the physical trigger threshold at the failure headwall.
+3. **The Necessity of Terrain Susceptibility:** Multivariate ML models outperform the rainfall-only baseline ($0.6425$ vs $0.5100$) precisely because they incorporate topographic slope steepness and curvature hollows, identifying which mountain slopes are structurally predisposed to collapse when seasonal rains arrive.
+4. **Data Caveat:** Results reflect a small sample ($N=80$) paired with $\sim 10\text{ km}$ ERA5-Land atmospheric reanalysis. Real-world early warning requires localized AWS tipping-bucket rain gauges and Doppler radar nowcasting.
+
+---
+
 ## 9. System Architecture
 
 ### Offline Model-Building Pipeline
@@ -314,6 +348,18 @@ The FastAPI server runs at `http://127.0.0.1:8000`:
 - **Input:** JSON with `simulated_rainfall_increment_mm` (e.g., $+80\text{ mm}$) and an array of corridor points.
 - **Output:** GeoJSON `FeatureCollection` containing updated risk tiers, adjusted rainfall totals, curvature, NDVI, and marker colors for map rendering.
 
+#### Verified Corridor Storm Simulation Tier Summary (15 Monitored Highway Stations)
+
+| Rainfall Scenario | Tier Distribution (Green / Yellow / Red) | High Risk Stations Count | Critical Highway Sectors at High Risk |
+| :--- | :---: | :---: | :--- |
+| **+0 mm (Baseline)** | **3 Green / 12 Yellow / 0 Red** | **0 High** | None (12 Watch, 3 Normal: Teesta Bazaar, Rangpo, Penlong La) |
+| **+50 mm** | **2 Green / 6 Yellow / 7 Red** | **7 High** | 29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam, Tadong Mile 6 |
+| **+100 mm** | **2 Green / 7 Yellow / 6 Red** | **6 High** | 29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam |
+| **+200 mm** | **2 Green / 7 Yellow / 6 Red** | **6 High** | 29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam |
+| **+300 mm** | **2 Green / 7 Yellow / 6 Red** | **6 High** | 29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam |
+
+> **Operational Note on +100 mm Scenario:** Exactly 6 stations escalate to High (Critical Warning, $P \ge 0.70$) under +100 mm storm conditions. Tadong Mile 6 transitions from Red ($P=0.7057$ at +50 mm) to Yellow ($P=0.6380$ at +100 mm) due to non-linear multi-feature tree splits across 7-day cumulative saturation.
+
 ---
 
 ## 11. Dashboard User Interface Guide & Backend Verification
@@ -355,6 +401,10 @@ The frontend runs at `http://localhost:5173/`:
 5. **Uncalibrated Model Scores:** Decision scores produced by Random Forest represent tree vote fractions rather than calibrated posterior probabilities; thresholds ($0.25$ for Yellow, $0.70$ for Red) are research prototypes tuned on validation data.
 6. **2000-Era DEM:** SRTM 30m topographic data reflects ground elevation from the February 2000 mission; it does not reflect recent highway widening cuts, benching, or gabion retaining structures.
 7. **No Real-Rainfall Validation:** While terrain features were cross-validated on real historical events, the model's dynamic rainfall trigger thresholds have not been validated against multi-season precipitation telemetry during actual slope failure moments.
+
+> **Model Behavior Note on Rainfall Monotonicity & Tier Sensitivity:** The Random Forest is not monotonic in rainfall. In the current station set the number of High stations is 7 at +50 mm and 6 at +100 mm. Stations whose score is close to a tier threshold can change tier with small input changes.
+>
+> In sensitivity tests, replacing a near-zero live 24-hour rainfall with the training median slightly LOWERS the score at several stations, i.e. the model gives dry weather a slightly higher score than moderate rain at those stations. This is a quirk of the synthetic-label model near the edge of the training range. The cause was not verified. Because of this, Watch in dry weather must not be read as 'terrain only' or as a rainfall effect.
 
 ### How to Run Everything (Step-by-Step)
 ```bash

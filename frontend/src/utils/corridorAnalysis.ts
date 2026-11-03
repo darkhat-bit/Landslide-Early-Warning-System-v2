@@ -1,4 +1,12 @@
 import { CORRIDOR_POINTS, CorridorPointData, CalculatedRisk } from '../data/corridorData';
+import { TRAINING_FEATURE_RANGES, FeatureRange } from '../data/trainingRanges';
+
+export type ProvenanceTag =
+  | 'From terrain data (DEM)'
+  | 'Approximate (hand-estimated)'
+  | 'Default value'
+  | 'Simulated scenario'
+  | 'Live weather model';
 
 export interface FeatureDetail {
   key: string;
@@ -6,7 +14,11 @@ export interface FeatureDetail {
   value: string;
   numericValue: number;
   unit: string;
-  sourceTag: 'From terrain data' | 'Approximate' | 'Simulated';
+  sourceTag: ProvenanceTag;
+  isWithinRange: boolean;
+  trainingMin: number;
+  trainingMax: number;
+  reliabilityWarning?: string;
   median: number;
   plainExplanation: string;
 }
@@ -34,20 +46,33 @@ export const CORRIDOR_MEDIANS = {
 /**
  * Returns the 11 physical factors in plain, clear language.
  */
-export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRisk | null): FeatureDetail[] {
+export function getStationFeatures(
+  point: CorridorPointData,
+  risk?: CalculatedRisk | null,
+  isLiveWeather: boolean = false
+): FeatureDetail[] {
   const rain24 = risk?.rain_24h_mm_adjusted ?? point.rain_24h_mm;
   const rain3d = risk?.rain_3d_mm_adjusted ?? point.rain_3d_mm;
   const rain7d = risk?.rain_7d_mm_adjusted ?? point.rain_7d_mm;
-  const soilMoisture = point.soil_moisture_pct;
+  const soilMoisture = risk?.soil_moisture_pct_adjusted ?? point.soil_moisture_pct;
 
-  return [
+  const rawFeatures: Array<{
+    key: string;
+    label: string;
+    value: string;
+    numericValue: number;
+    unit: string;
+    sourceTag: ProvenanceTag;
+    median: number;
+    plainExplanation: string;
+  }> = [
     {
       key: 'slope_deg',
       label: 'Hillside slope',
       value: `${point.slope_deg.toFixed(1)}°`,
       numericValue: point.slope_deg,
       unit: 'degrees',
-      sourceTag: 'From terrain data',
+      sourceTag: 'From terrain data (DEM)',
       median: CORRIDOR_MEDIANS.slope_deg,
       plainExplanation: 'Steeper ground slides more easily under gravity',
     },
@@ -57,7 +82,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${rain24.toFixed(0)} mm`,
       numericValue: rain24,
       unit: 'mm',
-      sourceTag: 'Simulated',
+      sourceTag: isLiveWeather ? 'Live weather model' : 'Simulated scenario',
       median: CORRIDOR_MEDIANS.rain_24h_mm,
       plainExplanation: 'Heavy quick rain triggers sudden shallow mud and rock slides',
     },
@@ -67,7 +92,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${rain3d.toFixed(0)} mm`,
       numericValue: rain3d,
       unit: 'mm',
-      sourceTag: 'Simulated',
+      sourceTag: isLiveWeather ? 'Live weather model' : 'Simulated scenario',
       median: CORRIDOR_MEDIANS.rain_3d_mm,
       plainExplanation: 'Several days of rain soak through topsoil',
     },
@@ -77,7 +102,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${rain7d.toFixed(0)} mm`,
       numericValue: rain7d,
       unit: 'mm',
-      sourceTag: 'Simulated',
+      sourceTag: isLiveWeather ? 'Live weather model' : 'Simulated scenario',
       median: CORRIDOR_MEDIANS.rain_7d_mm,
       plainExplanation: 'A full week of rain raises groundwater and loosens deep earth',
     },
@@ -87,7 +112,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${soilMoisture.toFixed(0)}%`,
       numericValue: soilMoisture,
       unit: '%',
-      sourceTag: 'Simulated',
+      sourceTag: isLiveWeather ? 'Live weather model' : 'Simulated scenario',
       median: CORRIDOR_MEDIANS.soil_moisture_pct,
       plainExplanation: 'How waterlogged the hillside already is',
     },
@@ -97,7 +122,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${point.dist_to_road_m} m`,
       numericValue: point.dist_to_road_m,
       unit: 'm',
-      sourceTag: 'Approximate',
+      sourceTag: 'Approximate (hand-estimated)',
       median: CORRIDOR_MEDIANS.dist_to_road_m,
       plainExplanation: 'Road cuts weaken the base of mountain slopes',
     },
@@ -107,7 +132,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${point.dist_to_river_m} m`,
       numericValue: point.dist_to_river_m,
       unit: 'm',
-      sourceTag: 'Approximate',
+      sourceTag: 'Approximate (hand-estimated)',
       median: CORRIDOR_MEDIANS.dist_to_river_m,
       plainExplanation: 'Fast river water can erode and wash away slope toes',
     },
@@ -117,7 +142,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${point.elevation_m} m`,
       numericValue: point.elevation_m,
       unit: 'm',
-      sourceTag: 'From terrain data',
+      sourceTag: 'From terrain data (DEM)',
       median: CORRIDOR_MEDIANS.elevation_m,
       plainExplanation: 'Higher altitudes catch more cloudburst clouds',
     },
@@ -126,8 +151,8 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       label: 'Ground shape (curvature)',
       value: point.curvature < 0 ? 'Bowl / hollow (water gathers)' : 'Ridge (water runs off)',
       numericValue: point.curvature,
-      unit: '',
-      sourceTag: 'From terrain data',
+      unit: '100/m',
+      sourceTag: 'From terrain data (DEM)',
       median: CORRIDOR_MEDIANS.curvature,
       plainExplanation: 'Bowl-shaped hollows trap rainwater and trigger slides faster',
     },
@@ -137,7 +162,7 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       value: `${point.aspect_deg.toFixed(0)}°`,
       numericValue: point.aspect_deg,
       unit: 'degrees',
-      sourceTag: 'From terrain data',
+      sourceTag: 'From terrain data (DEM)',
       median: CORRIDOR_MEDIANS.aspect_deg,
       plainExplanation: 'Slopes facing south take the brunt of incoming monsoon winds',
     },
@@ -146,17 +171,31 @@ export function getStationFeatures(point: CorridorPointData, risk?: CalculatedRi
       label: 'Tree and plant cover',
       value: `${(point.ndvi * 100).toFixed(0)}%`,
       numericValue: point.ndvi,
-      unit: '',
-      sourceTag: 'Simulated',
+      unit: 'index',
+      sourceTag: 'Default value',
       median: CORRIDOR_MEDIANS.ndvi,
       plainExplanation: 'Tree roots hold soil together; bare ground slides more',
     },
   ];
+
+  return rawFeatures.map((f) => {
+    const range: FeatureRange | undefined = TRAINING_FEATURE_RANGES[f.key];
+    const minVal = range ? range.min : -Infinity;
+    const maxVal = range ? range.max : Infinity;
+    const within = f.numericValue >= minVal && f.numericValue <= maxVal;
+
+    return {
+      ...f,
+      isWithinRange: within,
+      trainingMin: minVal,
+      trainingMax: maxVal,
+      reliabilityWarning: within
+        ? undefined
+        : `Outside training range (${minVal.toFixed(1)}–${maxVal.toFixed(1)} ${f.unit}), less reliable`,
+    };
+  });
 }
 
-/**
- * Top 3 factors explaining why this place has higher risk than others along NH-10.
- */
 export function getTopFlaggedFeatures(point: CorridorPointData, risk?: CalculatedRisk | null): string[] {
   const rain24 = risk?.rain_24h_mm_adjusted ?? point.rain_24h_mm;
   const rain7d = risk?.rain_7d_mm_adjusted ?? point.rain_7d_mm;

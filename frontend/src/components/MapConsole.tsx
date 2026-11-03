@@ -4,22 +4,33 @@ import {
   CORRIDOR_POINTS,
   CorridorPointData,
   calculateLocalRisk,
-  CalculatedRisk
+  CalculatedRisk,
+  LiveStationData,
+  CorridorTimeline,
+  RouteAnalysisData,
+  RouteSegmentData
 } from '../data/corridorData';
 import { AlertItem } from '../types/alert';
 import { LeftSidebar } from './LeftSidebar';
 import { LocationInspector } from './LocationInspector';
+import { RouteWarningPanel } from './RouteWarningPanel';
+import { DEFAULT_ROUTE_IN_COVERAGE, DEFAULT_ROUTE_OUT_OF_COVERAGE } from '../data/defaultRoutes';
+import { Navigation } from 'lucide-react';
 import { BottomDock } from './BottomDock';
 import {
   AlertTriangle,
   ArrowLeft,
   HelpCircle,
+  Info,
   Menu,
+  MessageSquare,
   ShieldAlert,
   X
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
 import { ThemeId } from '../utils/theme';
+import { AboutLimitationsModal } from './AboutLimitationsModal';
+import { FeedbackAlertsModal } from './FeedbackAlertsModal';
 
 interface MapConsoleProps {
   onBackToHome: () => void;
@@ -64,18 +75,64 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const routeLayerRef = useRef<L.Polyline | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
+  const routeSegmentsGroupRef = useRef<L.LayerGroup | null>(null);
 
   const requestIdRef = useRef(0);
   const previousTiersRef = useRef<Map<string, 'GREEN' | 'YELLOW' | 'RED'>>(new Map());
 
-  // States
-  const [rainfallDelta, setRainfallDelta] = useState<number>(0);
-  const [selectedPoint, setSelectedPoint] = useState<CorridorPointData | null>(null);
+  // Helper to parse query parameters from URL or hash
+  const getInitialParam = (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    const hash = window.location.hash;
+    const queryString = window.location.search || (hash.includes('?') ? hash.substring(hash.indexOf('?')) : '');
+    return new URLSearchParams(queryString).get(key);
+  };
+
+  // States with synchronous initializers for immediate snapshot consistency
+  const [rainfallDelta, setRainfallDelta] = useState<number>(() => {
+    const val = getInitialParam('delta');
+    return val && !isNaN(Number(val)) ? Number(val) : 0;
+  });
+  const [selectedPoint, setSelectedPoint] = useState<CorridorPointData | null>(() => {
+    const stId = getInitialParam('station');
+    return stId ? CORRIDOR_POINTS.find((p) => p.id === stId) || null : null;
+  });
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'RED' | 'YELLOW' | 'GREEN'>('ALL');
   const [mapStyle, setMapStyle] = useState<'map' | 'terrain' | 'satellite'>('map');
   const [isBackendHealthy, setIsBackendHealthy] = useState<boolean>(false);
   const [riskStatus, setRiskStatus] = useState<'loading' | 'backend' | 'fallback'>('loading');
   const [backendRisks, setBackendRisks] = useState<Map<string, CalculatedRisk> | null>(null);
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
+
+  // Live Weather & Timeline states
+  const [operationMode, setOperationMode] = useState<'SCENARIO' | 'LIVE'>(() => {
+    return getInitialParam('mode') === 'live' ? 'LIVE' : 'SCENARIO';
+  });
+  const [liveWeatherStations, setLiveWeatherStations] = useState<LiveStationData[]>([]);
+  const [liveWeatherStatus, setLiveWeatherStatus] = useState<string>('Connecting to weather model...');
+  const [liveWeatherNotice, setLiveWeatherNotice] = useState<string>('');
+  const [corridorTimeline, setCorridorTimeline] = useState<CorridorTimeline | null>(null);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
+  const [liveRisksMap, setLiveRisksMap] = useState<Map<string, CalculatedRisk>>(new Map());
+
+  // Phase 3: Route Hazard States
+  const [activeConsoleTab, setActiveConsoleTab] = useState<'STATIONS' | 'ROUTE'>(() => {
+    return getInitialParam('route') === '1' ? 'ROUTE' : 'STATIONS';
+  });
+  const [routeData, setRouteData] = useState<RouteAnalysisData | null>(() => {
+    if (getInitialParam('route') === '1') {
+      return getInitialParam('dest') === 'out' ? DEFAULT_ROUTE_OUT_OF_COVERAGE : DEFAULT_ROUTE_IN_COVERAGE;
+    }
+    return null;
+  });
+  const [selectedSegment, setSelectedSegment] = useState<RouteSegmentData | null>(() => {
+    if (getInitialParam('route') === '1' && getInitialParam('dest') === 'out') {
+      return DEFAULT_ROUTE_OUT_OF_COVERAGE.segments.find(s => s.tier === 'NO_COVERAGE') || null;
+    }
+    return null;
+  });
+  const [isRouteLoading, setIsRouteLoading] = useState<boolean>(false);
+  const [showStationsLayer, setShowStationsLayer] = useState<boolean>(true);
 
   // Alert Inbox states
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
@@ -83,6 +140,34 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
   const [toastAlert, setToastAlert] = useState<AlertItem | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(() => typeof window !== 'undefined' && (window.location.hash.includes('feedback=1') || window.location.search.includes('feedback=1')));
+  const [feedbackStation, setFeedbackStation] = useState<CorridorPointData | null>(null);
+
+  // Read initial query / hash parameters (e.g. #console?station=pt-9&delta=100)
+  useEffect(() => {
+    const hash = window.location.hash;
+    const queryString = window.location.search || (hash.includes('?') ? hash.substring(hash.indexOf('?')) : '');
+    const params = new URLSearchParams(queryString);
+    const stId = params.get('station');
+    if (stId) {
+      const found = CORRIDOR_POINTS.find((p) => p.id === stId);
+      if (found) setSelectedPoint(found);
+    }
+    const deltaStr = params.get('delta');
+    if (deltaStr && !isNaN(Number(deltaStr))) {
+      setRainfallDelta(Number(deltaStr));
+    }
+    if (params.get('about') === '1') {
+      setShowAboutModal(true);
+    }
+    if (params.get('feedback') === '1') {
+      setShowFeedbackModal(true);
+    }
+    if (params.get('mode') === 'live') {
+      setOperationMode('LIVE');
+    }
+  }, []);
 
   // Initial health check
   useEffect(() => {
@@ -204,12 +289,15 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
         setBackendRisks(mapped);
         setRiskStatus('backend');
         setIsBackendHealthy(true);
+        setApiErrorMessage(null);
 
         if (newAlertItems.length > 0) {
           setAlerts((prev) => [...newAlertItems, ...prev].slice(0, 50));
         }
-      } catch {
+      } catch (err) {
         if (!active || currentReq !== requestIdRef.current) return;
+        const msg = err instanceof Error ? err.message : 'Model API unavailable, showing local fallback estimate';
+        setApiErrorMessage(msg);
         setBackendRisks(null);
         setRiskStatus('fallback');
         setIsBackendHealthy(false);
@@ -221,8 +309,59 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
       window.clearTimeout(timer);
     };
   }, [rainfallDelta]);
+  // Fetch Live Weather & Forward Timeline
+  useEffect(() => {
+    let active = true;
+    const fetchLive = async () => {
+      try {
+        const [wRes, tRes] = await Promise.all([
+          fetch('/api/v1/weather/live'),
+          fetch('/api/v1/weather/timeline')
+        ]);
+        if (!active) return;
+        if (wRes.ok) {
+          const wData = await wRes.json();
+          setLiveWeatherStations(wData.stations || []);
+          setLiveWeatherStatus(wData.status_message || 'Connected');
+          setLiveWeatherNotice(wData.source_notice || '');
+          setIsLiveConnected(wData.is_connected ?? true);
 
-  const risksMap = riskStatus === 'backend' && backendRisks ? backendRisks : localRisksMap;
+          const mappedLive = new Map<string, CalculatedRisk>();
+          (wData.stations || []).forEach((st: LiveStationData) => {
+            mappedLive.set(st.point_id, {
+              failure_probability: st.failure_probability,
+              risk_tier: st.risk_tier,
+              color: st.risk_tier === 'RED' ? '#ef4444' : st.risk_tier === 'YELLOW' ? '#eab308' : '#22c55e',
+              action_protocol: st.action_protocol,
+              rain_24h_mm_adjusted: st.rain_24h_mm,
+              rain_3d_mm_adjusted: st.rain_3d_mm,
+              rain_7d_mm_adjusted: st.rain_7d_mm,
+              soil_moisture_pct_adjusted: st.soil_moisture_pct,
+              risk_source: 'backend_model',
+            });
+          });
+          setLiveRisksMap(mappedLive);
+        } else {
+          setLiveWeatherStatus('Live weather model unavailable, using cached telemetry');
+        }
+
+        if (tRes.ok && active) {
+          const tData = await tRes.json();
+          setCorridorTimeline(tData);
+        }
+      } catch (err) {
+        if (!active) return;
+        setLiveWeatherStatus('Weather server unreachable. Scenario mode remains fully active.');
+        setIsLiveConnected(false);
+      }
+    };
+
+    fetchLive();
+    return () => { active = false; };
+  }, [operationMode]);
+
+
+  const risksMap = operationMode === 'LIVE' && liveRisksMap.size > 0 ? liveRisksMap : (riskStatus === 'backend' && backendRisks ? backendRisks : localRisksMap);
   const selectedPointRisk = selectedPoint ? risksMap.get(selectedPoint.id) || null : null;
 
   // Compute tier counts for summary banner
@@ -240,9 +379,15 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
 
   // Summary message
   const summaryMessage =
-    rainfallDelta === 0
-      ? `Normal baseline: ${highCount} places are High risk, ${watchCount} need watching, ${lowCount} are low.`
-      : `With +${rainfallDelta} mm extra rain: ${highCount} places are High risk, ${watchCount} need watching, ${lowCount} are low.`;
+    operationMode === 'LIVE'
+      ? (highCount > 0
+          ? `Live Weather Alert: ${highCount} place${highCount > 1 ? 's are' : ' is'} High risk, ${watchCount} need watching, ${lowCount} are low.`
+          : (watchCount > 0
+              ? `Live Weather: 0 places are High risk, ${watchCount} need watching, ${lowCount} are low.`
+              : `Live Weather: All 15 places are low risk today (post-monsoon dry season).`))
+      : (rainfallDelta === 0
+          ? `Normal baseline: ${highCount} places are High risk, ${watchCount} need watching, ${lowCount} are low.`
+          : `With +${rainfallDelta} mm extra rain: ${highCount} places are High risk, ${watchCount} need watching, ${lowCount} are low.`);
 
   // Initialize Map with OpenStreetMap Standard (NO CARTO)
   useEffect(() => {
@@ -263,20 +408,14 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    const routeCoords: [number, number][] = CORRIDOR_POINTS.map((pt) => [pt.latitude, pt.longitude]);
-    const polyline = L.polyline(routeCoords, {
-      color: '#0284c7',
-      weight: 3.5,
-      opacity: 0.8,
-      dashArray: '6, 6'
-    }).addTo(map);
-
+    // Phase 3: Removed static polyline between stations; route geometry is dynamic
     const markersGroup = L.layerGroup().addTo(map);
+    const routeSegmentsGroup = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
     tileLayerRef.current = osmLayer;
-    routeLayerRef.current = polyline;
     markersGroupRef.current = markersGroup;
+    routeSegmentsGroupRef.current = routeSegmentsGroup;
 
     return () => {
       map.remove();
@@ -377,6 +516,106 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
     });
   }, [risksMap, selectedFilter, selectedPoint]);
 
+  // Phase 3: Route Hazard Assessment Execution
+  const handleAnalyzeRoute = async (startLat: number, startLon: number, endLat: number, endLon: number) => {
+    setIsRouteLoading(true);
+    try {
+      const res = await fetch('/api/v1/route/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_lat: startLat,
+          start_lon: startLon,
+          end_lat: endLat,
+          end_lon: endLon,
+          operation_mode: operationMode,
+          rainfall_delta: rainfallDelta,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setRouteData(data);
+      }
+    } catch (err) {
+      console.error('Failed to analyze route hazard:', err);
+    } finally {
+      setIsRouteLoading(false);
+    }
+  };
+
+  // Draw dynamic colored route segments on Leaflet canvas
+  useEffect(() => {
+    if (!mapInstanceRef.current || !routeSegmentsGroupRef.current) return;
+    routeSegmentsGroupRef.current.clearLayers();
+
+    if (!routeData || !routeData.segments) return;
+
+    const latLngsForAll: L.LatLngTuple[] = [];
+
+    routeData.segments.forEach((seg) => {
+      // seg.coordinates: [lon, lat] -> Leaflet requires [lat, lon]
+      const latLngs = seg.coordinates.map((c) => [c[1], c[0]] as L.LatLngTuple);
+      latLngsForAll.push(...latLngs);
+
+      const poly = L.polyline(latLngs, {
+        color: seg.color,
+        weight: 6,
+        opacity: 0.88,
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+
+      const tierLabel = seg.tier === 'RED' ? 'High Risk' : (seg.tier === 'YELLOW' ? 'Watch' : (seg.tier === 'GREEN' ? 'Low Risk' : 'No Model Coverage'));
+      poly.bindTooltip(
+        `<div style="font-family: inherit; font-size: 12px; font-weight: 600;">
+          <strong>km ${seg.start_km.toFixed(1)} – ${seg.end_km.toFixed(1)}</strong><br/>
+          <span style="color: ${seg.color}">${tierLabel}</span> (Avg Score: ${seg.avg_score.toFixed(4)})
+        </div>`,
+        { sticky: true }
+      );
+
+      poly.on('click', () => {
+        setSelectedSegment(seg);
+      });
+
+      routeSegmentsGroupRef.current?.addLayer(poly);
+    });
+
+    if (latLngsForAll.length > 0) {
+      const bounds = L.latLngBounds(latLngsForAll);
+      mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+    }
+  }, [routeData]);
+
+  // Toggle highway station markers layer visibility
+  useEffect(() => {
+    if (!markersGroupRef.current || !mapInstanceRef.current) return;
+    if (showStationsLayer) {
+      if (!mapInstanceRef.current.hasLayer(markersGroupRef.current)) {
+        mapInstanceRef.current.addLayer(markersGroupRef.current);
+      }
+    } else {
+      if (mapInstanceRef.current.hasLayer(markersGroupRef.current)) {
+        mapInstanceRef.current.removeLayer(markersGroupRef.current);
+      }
+    }
+  }, [showStationsLayer]);
+
+  // Auto-trigger route if URL has route=1
+  useEffect(() => {
+    const routeParam = getInitialParam('route');
+    if (routeParam === '1') {
+      const destParam = getInitialParam('dest');
+      if (destParam === 'out') {
+        // Out of coverage route test: Rangpo to North Sikkim (27.60°N, 88.50°E)
+        handleAnalyzeRoute(27.1764, 88.5283, 27.6000, 88.5000);
+      } else {
+        // In-coverage route test: Rangpo to Gangtok
+        handleAnalyzeRoute(27.1764, 88.5283, 27.3389, 88.6138);
+      }
+    }
+  }, []);
+
   const handleSelectStation = (point: CorridorPointData) => {
     setSelectedPoint(point);
     mapInstanceRef.current?.panTo([point.latitude, point.longitude], { animate: true });
@@ -402,10 +641,38 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
           </div>
         </div>
 
+        {/* View Switcher: Stations vs Route Warning */}
+        <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs font-semibold">
+          <button
+            onClick={() => setActiveConsoleTab('STATIONS')}
+            className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+              activeConsoleTab === 'STATIONS'
+                ? 'bg-white text-blue-700 shadow-xs'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Corridor Places (15)
+          </button>
+          <button
+            onClick={() => setActiveConsoleTab('ROUTE')}
+            className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeConsoleTab === 'ROUTE'
+                ? 'bg-white text-blue-700 shadow-xs'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Navigation className="w-3.5 h-3.5 text-blue-600" />
+            <span>Route Warning</span>
+          </button>
+        </div>
+
         {/* Short Prototype Honesty Tag */}
-        <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
-          <span className="px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-600 font-medium">
-            Prototype • Simulated rainfall
+        <div className="hidden lg:flex items-center gap-2 text-xs text-gray-500">
+          <span
+            className="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-medium cursor-help"
+            title="Prototype. The model was trained on synthetic labels. Not an official warning. Check IMD, GSI, district authorities and local road status."
+          >
+            Prototype: Synthetic model • Check IMD / GSI for official warnings
           </span>
         </div>
 
@@ -431,6 +698,23 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
           )}
 
           <button
+            onClick={() => { setFeedbackStation(selectedPoint); setShowFeedbackModal(true); }}
+            className="p-1.5 px-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-xs font-medium cursor-pointer flex items-center gap-1.5"
+            title="Report field hazard observation or dispatch emergency alert"
+          >
+            <MessageSquare className="w-4 h-4 text-emerald-600" />
+            <span className="hidden sm:inline">Feedback & Alerts</span>
+          </button>
+          <button
+            onClick={() => setShowAboutModal(true)}
+            className="p-1.5 px-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-xs font-medium cursor-pointer flex items-center gap-1.5"
+            title="About and technical limitations"
+          >
+            <Info className="w-4 h-4 text-amber-600" />
+            <span className="hidden sm:inline">About & Limitations</span>
+          </button>
+
+          <button
             onClick={() => setShowHelpModal(true)}
             className="p-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-xs font-medium cursor-pointer flex items-center gap-1"
             title="How danger levels work"
@@ -448,14 +732,32 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
         </div>
       </header>
 
+      {/* Fallback Warning Banner if API fails */}
+      {riskStatus === 'fallback' && (
+        <div className="bg-amber-100 border-b border-amber-300 px-4 py-2 text-xs text-amber-900 flex items-center justify-between shrink-0 z-10">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Model API unavailable:</strong> Showing local heuristic fallback estimate{apiErrorMessage ? ` (${apiErrorMessage})` : ''}. Early warning alerts are paused in fallback mode.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Summary Sentence Under Top Bar (Main Message of Page) ─ */}
       <div className="bg-blue-50/80 border-b border-blue-200 px-4 py-2 shrink-0 z-10 flex items-center justify-between">
         <p className="text-sm sm:text-base font-semibold text-blue-950 flex items-center gap-2">
-          <span>{summaryMessage}</span>
+          <span>{activeConsoleTab === 'ROUTE' && routeData?.route_summary ? routeData.route_summary.summary_sentence : summaryMessage}</span>
         </p>
-        <span className="text-xs text-blue-800 font-medium hidden sm:inline">
-          Move the slider below to test other rain levels
-        </span>
+        {operationMode === 'LIVE' ? (
+          <span className="text-xs text-blue-800 font-medium hidden sm:inline">
+            Weather is the nearest model grid cell, not a measurement at the station (early November dry season)
+          </span>
+        ) : (
+          <span className="text-xs text-blue-800 font-medium hidden sm:inline">
+            Move the slider below to test other rain levels
+          </span>
+        )}
       </div>
 
       {/* ── Main Area ─────────────────────────────────────────── */}
@@ -466,27 +768,48 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           } md:translate-x-0 transition-transform duration-200 absolute md:relative z-20 h-full`}
         >
-          <LeftSidebar
-            onBackToHome={onBackToHome}
-            selectedFilter={selectedFilter}
-            onSelectFilter={setSelectedFilter}
-            points={CORRIDOR_POINTS}
-            risksMap={risksMap}
-            isBackendHealthy={isBackendHealthy}
-            riskStatus={riskStatus}
-            selectedPointId={selectedPoint?.id || null}
-            onSelectPoint={handleSelectStation}
-            alerts={alerts}
-            onSelectAlertStation={handleSelectStation}
-            onClearAlerts={() => {
-              setAlerts([]);
-              setSelectedAlert(null);
-            }}
-            onMarkAllRead={() => setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })))}
-            selectedAlert={selectedAlert}
-            onSelectAlert={setSelectedAlert}
-            onOpenHelp={() => setShowHelpModal(true)}
-          />
+          {activeConsoleTab === 'ROUTE' ? (
+            <RouteWarningPanel
+              onAnalyzeRoute={handleAnalyzeRoute}
+              isLoading={isRouteLoading}
+              routeData={routeData}
+              selectedSegment={selectedSegment}
+              onSelectSegment={setSelectedSegment}
+              showStationsLayer={showStationsLayer}
+              onToggleStationsLayer={setShowStationsLayer}
+              rainfallDelta={rainfallDelta}
+              operationMode={operationMode}
+              onCloseRoute={() => setActiveConsoleTab('STATIONS')}
+            />
+          ) : (
+            <LeftSidebar
+              onBackToHome={onBackToHome}
+              selectedFilter={selectedFilter}
+              onSelectFilter={setSelectedFilter}
+              points={CORRIDOR_POINTS}
+              risksMap={risksMap}
+              isBackendHealthy={isBackendHealthy}
+              riskStatus={riskStatus}
+              selectedPointId={selectedPoint?.id || null}
+              onSelectPoint={handleSelectStation}
+              alerts={alerts}
+              onSelectAlertStation={handleSelectStation}
+              onClearAlerts={() => {
+                setAlerts([]);
+                setSelectedAlert(null);
+              }}
+              onMarkAllRead={() => setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })))}
+              selectedAlert={selectedAlert}
+              onSelectAlert={setSelectedAlert}
+              onOpenHelp={() => setShowHelpModal(true)}
+              rainfallDelta={rainfallDelta}
+              operationMode={operationMode}
+              onModeChange={setOperationMode}
+              liveWeatherStatus={liveWeatherStatus}
+              liveWeatherNotice={liveWeatherNotice}
+              corridorTimeline={corridorTimeline}
+            />
+          )}
         </div>
 
         {/* Map Area */}
@@ -502,6 +825,9 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
               onClose={() => setSelectedPoint(null)}
               onPanToStation={handleSelectStation}
               rainfallDelta={rainfallDelta}
+              operationMode={operationMode}
+              liveStationData={selectedPoint ? liveWeatherStations.find(s => s.point_id === selectedPoint.id) || null : null}
+              stationTimeline={selectedPoint && corridorTimeline ? corridorTimeline.station_strips.find(s => s.point_id === selectedPoint.id) || null : null}
             />
 
             {/* Unobtrusive Toast for High Risk Alerts */}
@@ -541,19 +867,74 @@ export const MapConsole: React.FC<MapConsoleProps> = ({
             )}
           </div>
 
-          {/* Full-width single-row rain slider at the very bottom of the map area */}
-          <BottomDock
-            rainfallDelta={rainfallDelta}
-            onChangeRainfallDelta={setRainfallDelta}
-            mapStyle={mapStyle}
-            onToggleMapStyle={setMapStyle}
-            points={CORRIDOR_POINTS}
-            risksMap={risksMap}
-          />
+          {/* Bottom Dock: Live Timeline Dock in Live Mode, Rain Slider Dock in Scenario Mode */}
+          {operationMode === 'LIVE' ? (
+            <div className="bg-white/95 backdrop-blur-md border-t border-gray-300 px-4 py-2 shadow-lg flex items-center justify-between gap-2.5 z-10 shrink-0 min-w-0">
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold text-xs text-gray-900 uppercase tracking-wide">Live Atmospheric Model Mode</span>
+                <span className="text-[11px] text-gray-500 hidden md:inline">
+                  (Source: Open-Meteo ~10 km grid)
+                </span>
+              </div>
+
+              {corridorTimeline && (
+                <div className="flex items-center gap-1.5 text-xs shrink-0">
+                  <span className="text-gray-500 font-medium hidden sm:inline">72h Forward Strip:</span>
+                  <div className="flex gap-1">
+                    {Object.entries(corridorTimeline.horizons).map(([hKey, hData]: [string, any]) => {
+                      const peakTier = hData.peak_risk_tier;
+                      return (
+                        <div
+                          key={hKey}
+                          className={`px-1.5 py-0.5 rounded text-[11px] font-semibold border ${
+                            peakTier === 'RED'
+                              ? 'bg-red-100 text-red-800 border-red-300'
+                              : peakTier === 'YELLOW'
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-green-100 text-green-800 border-green-300'
+                          }`}
+                          title={`Horizon ${hKey}: ${hData.tier_counts.RED} High, ${hData.tier_counts.YELLOW} Watch, ${hData.tier_counts.GREEN} Low`}
+                        >
+                          {hKey}: {peakTier === 'RED' ? 'High' : peakTier === 'YELLOW' ? 'Watch' : 'Low'}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setOperationMode('SCENARIO')}
+                  className="px-2.5 py-1 rounded-lg border border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                >
+                  Switch to What-if Slider →
+                </button>
+              </div>
+            </div>
+          ) : (
+            <BottomDock
+              rainfallDelta={rainfallDelta}
+              onChangeRainfallDelta={setRainfallDelta}
+              mapStyle={mapStyle}
+              onToggleMapStyle={setMapStyle}
+              points={CORRIDOR_POINTS}
+              risksMap={risksMap}
+            />
+          )}
         </div>
       </div>
 
       {/* ── How Tiers Work Help Modal ──────────────────────────── */}
+      <AboutLimitationsModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
+      <FeedbackAlertsModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        selectedStationName={feedbackStation?.name || selectedPoint?.name}
+        selectedStationId={feedbackStation?.id || selectedPoint?.id}
+      />
+
       {showHelpModal && (
         <div className="fixed inset-0 z-[1050] bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl border border-gray-300 max-w-md w-full p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150">

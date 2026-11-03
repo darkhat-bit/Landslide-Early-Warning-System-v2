@@ -1,0 +1,25 @@
+point_id,station_name,rain_24h_mm,score,tier
+pt-1,29th Mile Landslide Zone,0.0,0.361,YELLOW
+pt-1,29th Mile Landslide Zone,0.3,0.361,YELLOW
+pt-1,29th Mile Landslide Zone,1.0,0.361,YELLOW
+pt-1,29th Mile Landslide Zone,5.0,0.3622,YELLOW
+pt-1,29th Mile Landslide Zone,10.0,0.3322,YELLOW
+pt-1,29th Mile Landslide Zone,25.0,0.3139,YELLOW
+pt-1,29th Mile Landslide Zone,50.0,0.2711,YELLOW
+pt-1,29th Mile Landslide Zone,100.0,0.497,YELLOW
+pt-3,Likhipir Hairpin Bend,0.0,0.3604,YELLOW
+pt-3,Likhipir Hairpin Bend,0.3,0.3604,YELLOW
+pt-3,Likhipir Hairpin Bend,1.0,0.3604,YELLOW
+pt-3,Likhipir Hairpin Bend,5.0,0.3589,YELLOW
+pt-3,Likhipir Hairpin Bend,10.0,0.349,YELLOW
+pt-3,Likhipir Hairpin Bend,25.0,0.3428,YELLOW
+pt-3,Likhipir Hairpin Bend,50.0,0.2962,YELLOW
+pt-3,Likhipir Hairpin Bend,100.0,0.5012,YELLOW
+pt-13,Gangtok Zero Point Ridge,0.0,0.3041,YELLOW
+pt-13,Gangtok Zero Point Ridge,0.3,0.3041,YELLOW
+pt-13,Gangtok Zero Point Ridge,1.0,0.3041,YELLOW
+pt-13,Gangtok Zero Point Ridge,5.0,0.267,YELLOW
+pt-13,Gangtok Zero Point Ridge,10.0,0.2449,GREEN
+pt-13,Gangtok Zero Point Ridge,25.0,0.257,YELLOW
+pt-13,Gangtok Zero Point Ridge,50.0,0.2312,GREEN
+pt-13,Gangtok Zero Point Ridge,100.0,0.3318,YELLOW

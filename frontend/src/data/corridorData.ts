@@ -26,6 +26,7 @@ export interface CalculatedRisk {
   rain_24h_mm_adjusted: number;
   rain_3d_mm_adjusted: number;
   rain_7d_mm_adjusted?: number;
+  soil_moisture_pct_adjusted?: number;
   curvature?: number;
   ndvi?: number;
   risk_source: 'backend_model' | 'local_heuristic_fallback';
@@ -46,10 +47,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Lower Teesta Gorge, NH-10',
     latitude: 27.0215,
     longitude: 88.4419,
-    elevation_m: 318,
-    slope_deg: 34.3,
-    aspect_deg: 202.0,
-    curvature: -0.0773,
+    elevation_m: 326.9,
+    slope_deg: 33.8,
+    aspect_deg: 197.6,
+    curvature: 0.0076,
     dist_to_road_m: 15,
     dist_to_river_m: 60,
     rain_24h_mm: 45,
@@ -65,10 +66,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'NH-10 & Darjeeling Link Junction',
     latitude: 27.0583,
     longitude: 88.4317,
-    elevation_m: 431,
-    slope_deg: 10.7,
-    aspect_deg: 284.9,
-    curvature: -0.1243,
+    elevation_m: 431.3,
+    slope_deg: 13.5,
+    aspect_deg: 282.7,
+    curvature: 0.0878,
     dist_to_road_m: 35,
     dist_to_river_m: 30,
     rain_24h_mm: 35,
@@ -84,10 +85,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Melli Approach, NH-10',
     latitude: 27.0894,
     longitude: 88.4528,
-    elevation_m: 359,
-    slope_deg: 32.3,
-    aspect_deg: 166.7,
-    curvature: 0.8577,
+    elevation_m: 354.6,
+    slope_deg: 34.3,
+    aspect_deg: 162.9,
+    curvature: 0.6774,
     dist_to_road_m: 22,
     dist_to_river_m: 120,
     rain_24h_mm: 48,
@@ -103,10 +104,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Teesta Valley Corridor, NH-10',
     latitude: 27.1120,
     longitude: 88.4610,
-    elevation_m: 412,
-    slope_deg: 27.3,
-    aspect_deg: 61.9,
-    curvature: 0.0510,
+    elevation_m: 409.6,
+    slope_deg: 24.6,
+    aspect_deg: 58.3,
+    curvature: 0.0522,
     dist_to_road_m: 20,
     dist_to_river_m: 85,
     rain_24h_mm: 42,
@@ -122,10 +123,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Sikkim-West Bengal Border',
     latitude: 27.1264,
     longitude: 88.4681,
-    elevation_m: 666,
-    slope_deg: 31.1,
+    elevation_m: 675.5,
+    slope_deg: 29.9,
     aspect_deg: 265.4,
-    curvature: -0.0179,
+    curvature: -0.0393,
     dist_to_road_m: 50,
     dist_to_river_m: 40,
     rain_24h_mm: 32,
@@ -141,10 +142,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'East Sikkim Border Gateway',
     latitude: 27.1764,
     longitude: 88.5283,
-    elevation_m: 302,
-    slope_deg: 12.9,
-    aspect_deg: 203.4,
-    curvature: -0.5400,
+    elevation_m: 300.7,
+    slope_deg: 10.6,
+    aspect_deg: 207.2,
+    curvature: -0.4156,
     dist_to_road_m: 40,
     dist_to_river_m: 95,
     rain_24h_mm: 36,
@@ -160,10 +161,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Rangpo-Singtam Stretch, NH-10',
     latitude: 27.2052,
     longitude: 88.5089,
-    elevation_m: 746,
-    slope_deg: 32.1,
+    elevation_m: 749.0,
+    slope_deg: 33.2,
     aspect_deg: 296.0,
-    curvature: -1.3397,
+    curvature: -1.3266,
     dist_to_road_m: 28,
     dist_to_river_m: 110,
     rain_24h_mm: 50,
@@ -179,10 +180,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Central NH-10 & NH-510 Confluence',
     latitude: 27.2348,
     longitude: 88.4981,
-    elevation_m: 495,
-    slope_deg: 33.2,
-    aspect_deg: 172.0,
-    curvature: 0.2321,
+    elevation_m: 490.1,
+    slope_deg: 33.4,
+    aspect_deg: 169.6,
+    curvature: 0.1204,
     dist_to_road_m: 60,
     dist_to_river_m: 140,
     rain_24h_mm: 28,
@@ -198,10 +199,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Singtam-Ranipool Mountain Sector',
     latitude: 27.2685,
     longitude: 88.5412,
-    elevation_m: 1413,
-    slope_deg: 29.8,
-    aspect_deg: 120.7,
-    curvature: 1.9474,
+    elevation_m: 1397.1,
+    slope_deg: 39.9,
+    aspect_deg: 119.1,
+    curvature: 1.3673,
     dist_to_road_m: 16,
     dist_to_river_m: 280,
     rain_24h_mm: 52,
@@ -217,10 +218,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Sub-Gangtok Highway Sector',
     latitude: 27.2934,
     longitude: 88.5837,
-    elevation_m: 958,
-    slope_deg: 18.8,
-    aspect_deg: 36.0,
-    curvature: 0.2223,
+    elevation_m: 955.8,
+    slope_deg: 16.8,
+    aspect_deg: 38.8,
+    curvature: 0.2112,
     dist_to_road_m: 30,
     dist_to_river_m: 55,
     rain_24h_mm: 38,
@@ -236,10 +237,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Gangtok Approach, NH-10',
     latitude: 27.3142,
     longitude: 88.5992,
-    elevation_m: 1272,
-    slope_deg: 27.1,
-    aspect_deg: 286.5,
-    curvature: -0.1450,
+    elevation_m: 1274.6,
+    slope_deg: 26.4,
+    aspect_deg: 282.2,
+    curvature: -0.1527,
     dist_to_road_m: 20,
     dist_to_river_m: 350,
     rain_24h_mm: 46,
@@ -255,10 +256,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'Gangtok South Ridge',
     latitude: 27.3235,
     longitude: 88.6085,
-    elevation_m: 1465,
-    slope_deg: 24.8,
-    aspect_deg: 280.1,
-    curvature: -1.3011,
+    elevation_m: 1460.3,
+    slope_deg: 20.3,
+    aspect_deg: 283.7,
+    curvature: -0.9152,
     dist_to_road_m: 25,
     dist_to_river_m: 420,
     rain_24h_mm: 44,
@@ -274,10 +275,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'East Sikkim Capital Terminus',
     latitude: 27.3389,
     longitude: 88.6138,
-    elevation_m: 1703,
-    slope_deg: 24.5,
-    aspect_deg: 196.2,
-    curvature: -0.2940,
+    elevation_m: 1707.9,
+    slope_deg: 25.4,
+    aspect_deg: 200.2,
+    curvature: 0.0017,
     dist_to_road_m: 45,
     dist_to_river_m: 600,
     rain_24h_mm: 30,
@@ -293,10 +294,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'North Gangtok Bypass Alignment',
     latitude: 27.3712,
     longitude: 88.6210,
-    elevation_m: 1988,
-    slope_deg: 20.4,
-    aspect_deg: 0.0,
-    curvature: -0.0401,
+    elevation_m: 1987.5,
+    slope_deg: 19.0,
+    aspect_deg: 359.5,
+    curvature: 0.1494,
     dist_to_road_m: 30,
     dist_to_river_m: 220,
     rain_24h_mm: 40,
@@ -312,10 +313,10 @@ export const CORRIDOR_POINTS: CorridorPointData[] = [
     section: 'East-North Sikkim Highway Link',
     latitude: 27.4125,
     longitude: 88.5520,
-    elevation_m: 1859,
-    slope_deg: 22.5,
-    aspect_deg: 159.5,
-    curvature: -0.3924,
+    elevation_m: 1859.6,
+    slope_deg: 22.6,
+    aspect_deg: 166.3,
+    curvature: 0.0923,
     dist_to_road_m: 35,
     dist_to_river_m: 70,
     rain_24h_mm: 48,
@@ -364,16 +365,16 @@ export function calculateLocalRisk(point: CorridorPointData, rainDelta: number):
 
   let risk_tier: 'GREEN' | 'YELLOW' | 'RED' = 'GREEN';
   let color = '#22c55e';
-  let action_protocol = 'Normal monitoring. Continue routine geotechnical observation along corridor.';
+  let action_protocol = 'Normal monitoring. Continue routine geotechnical observation along corridor. [Example action protocol (illustrative, to be set by local authorities)]';
 
   if (p >= 0.70) {
     risk_tier = 'RED';
     color = '#ef4444';
-    action_protocol = 'CRITICAL ALERT — High probability of slope failure. Restrict traffic and evacuate vulnerable sectors.';
+    action_protocol = 'CRITICAL ALERT — High probability of slope failure. Restrict traffic and evacuate vulnerable sectors. [Example action protocol (illustrative, to be set by local authorities)]';
   } else if (p >= 0.25) {
     risk_tier = 'YELLOW';
     color = '#eab308';
-    action_protocol = 'WATCH ADVISORY — Enhanced monitoring active. Alert road maintenance squads and mobilize field sensors.';
+    action_protocol = 'WATCH ADVISORY — Enhanced monitoring active. Alert road maintenance squads and mobilize field sensors. [Example action protocol (illustrative, to be set by local authorities)]';
   }
 
   return {
@@ -388,4 +389,78 @@ export function calculateLocalRisk(point: CorridorPointData, rainDelta: number):
     ndvi: point.ndvi,
     risk_source: 'local_heuristic_fallback'
   };
+}
+
+
+export interface LiveStationData {
+  point_id: string;
+  station_name: string;
+  latitude: number;
+  longitude: number;
+  grid_latitude?: number;
+  grid_longitude?: number;
+  grid_elevation?: number;
+  shared_grid_with: string[];
+  rain_24h_mm: number;
+  rain_3d_mm: number;
+  rain_7d_mm: number;
+  soil_moisture_pct: number;
+  soil_moisture_m3m3: number;
+  imd_category_24h: string;
+  failure_probability: number;
+  risk_tier: 'GREEN' | 'YELLOW' | 'RED';
+  is_borderline: boolean;
+  action_protocol: string;
+  reliability?: any;
+}
+
+export interface TimelineEntry {
+  horizon_hours: number;
+  timestamp: string;
+  rain_24h_mm: number;
+  failure_probability: number;
+  risk_tier: 'GREEN' | 'YELLOW' | 'RED';
+  is_borderline: boolean;
+}
+
+export interface StationTimeline {
+  point_id: string;
+  station_name: string;
+  strip: TimelineEntry[];
+}
+
+export interface CorridorTimeline {
+  corridor_summary_sentence: string;
+  highest_tier: string;
+  is_connected: boolean;
+  source_notice: string;
+  horizons: Record<string, any>;
+  station_strips: StationTimeline[];
+}
+
+
+export interface RouteSegmentData {
+  start_km: number;
+  end_km: number;
+  tier: 'GREEN' | 'YELLOW' | 'RED' | 'NO_COVERAGE';
+  color: string;
+  coordinates: [number, number][];
+  sample_points_count: number;
+  avg_score: number;
+}
+
+export interface RouteSummaryData {
+  total_distance_km: number;
+  estimated_duration_min: number;
+  sample_points_count: number;
+  summary_sentence: string;
+  plain_segments_list: string[];
+}
+
+export interface RouteAnalysisData {
+  status: string;
+  route_summary: RouteSummaryData;
+  segments: RouteSegmentData[];
+  sample_points: any[];
+  raw_geojson: any;
 }

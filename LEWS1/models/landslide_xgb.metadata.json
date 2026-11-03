@@ -2,7 +2,7 @@
   "training_source": "synthetic_simulation_benchmark",
   "primary_model_type": "RandomForestClassifier",
   "performance_status": "synthetic_pipeline_verification_with_dem_terrain",
-  "dataset_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\data\\dataset.csv",
+  "dataset_path": "data/dataset.csv",
   "trained_at_utc": "2026-10-27T09:26:27.840691+00:00",
   "split_method": "3way_group_holdout:spatial_group",
   "random_seed": 42,
@@ -171,7 +171,7 @@
     "positive_count": 65,
     "negative_count": 238
   },
-  "model_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\models\\landslide_primary.joblib",
-  "scaler_path": "C:\\Users\\jaisw\\Desktop\\University\\LPU Semester-3\\CSE276\\CA2 Project\\LEWS1\\models\\scaler.joblib",
+  "model_path": "models/landslide_primary.joblib",
+  "scaler_path": "models/scaler.joblib",
   "disclaimer": "CRITICAL NOTE: Model trained on synthetic simulation dataset with DEM terrain. Accuracy/Recall numbers reflect software pipeline verification only and MUST NOT be interpreted as real-world landslide prediction performance."
 }

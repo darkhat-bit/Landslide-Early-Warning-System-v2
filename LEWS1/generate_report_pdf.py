@@ -180,7 +180,9 @@ def create_report_pdf(output_path: Path):
         "• <b>Target Highway Corridor:</b> East Sikkim NH-10 Corridor from Teesta Bazaar (27.02°N) to Gangtok Terminus & Dikchu Link (27.42°N).<br/>"
         "• <b>Active Corridor Bounding Box:</b> Latitude 27.00°N to 27.45°N, Longitude 88.40°E to 88.65°E.<br/>"
         "• <b>SRTM DEM Tile Extent:</b> NASA Tile <code>N27E088.hgt</code> covering Latitude 27.00°N to 28.00°N, Longitude 88.00°E to 89.00°E.<br/>"
-        "• <b>Corridor Elevation Range:</b> Monitored road stations span 302 m (Rangpo checkpost) to 1,988 m (Penlong La). (Tile extremes: 182 m to >8,000 m).<br/>"
+        "• <b>Corridor Elevation Range:</b> Monitored road stations span 300.7 m (Rangpo checkpost) to 1,987.5 m (Penlong La). (Tile extremes: 182 m to >8,000 m).<br/>"
+        "• <b>Corridor Slope Range:</b> Monitored road stations span 10.6° (Rangpo checkpost) to 39.9° (Martam Ridge Cutting).<br/>"
+        "• <b>Station Re-extraction Note:</b> Station terrain values were re-extracted from the SRTM DEM with the same function used for the training table. Station coordinates are approximate, so single-pixel values are sensitive to exact position.<br/>"
         "• <b>Geometry & Station Coordinates Provenance:</b> The 15 highway station coordinates are <b>approximate</b> milestone locations hand-selected along chronic failure sectors of NH-10 strictly within DEM bounds (27.02°N to 27.42°N). The road line on the map is an <b>approximate</b> piecewise corridor polyline connecting these 15 stations sequentially. River geometry is <b>approximate</b> (no vector GIS shapefile loaded; river and road distances are approximate estimates).",
         body_style,
     ))
@@ -345,6 +347,43 @@ def create_report_pdf(output_path: Path):
     story.append(t_rw)
     story.append(Spacer(1, 4))
 
+    # Rainfall Threshold Baseline Subsection (Phase 4)
+    story.append(Paragraph("<b>Rainfall Threshold Baseline vs. ML Models (Phase 4 Empirical Benchmark):</b>", h2_style))
+    story.append(Paragraph(
+        "To establish a non-ML baseline from published geotechnical literature, we implemented the classic <b>Caine (1980)</b> rainfall intensity-duration threshold: "
+        "<i>I = 14.82 &middot; D<sup>-0.39</sup></i> &rArr; cumulative threshold <i>E = 14.82 &middot; D<sup>0.61</sup></i> "
+        "(<i>E<sub>24h</sub> = 102.76 mm</i>, <i>E<sub>72h</sub> = 201.05 mm</i>). "
+        "Evaluated on season-matched events and background days (N=80) with 10,000 bootstrap CI iterations:",
+        body_style,
+    ))
+
+    thresh_table_data = [
+        [Paragraph("Approach / Benchmark", table_cell_bold), Paragraph("Type", table_cell_bold), Paragraph("Criterion", table_cell_bold), Paragraph("ROC-AUC", table_cell_bold), Paragraph("Bootstrap 95% CI", table_cell_bold), Paragraph("Sensitivity", table_cell_bold), Paragraph("Specificity", table_cell_bold)],
+        [Paragraph("Caine (1980) 24h Threshold", table_cell), Paragraph("Physics Threshold", table_cell), Paragraph("Rain &ge; 102.8 mm", table_cell), Paragraph("0.5750", table_cell), Paragraph("[0.5244, 0.6351]", table_cell), Paragraph("15.00%", table_cell), Paragraph("100.00%", table_cell)],
+        [Paragraph("Caine (1980) 72h Threshold", table_cell), Paragraph("Physics Threshold", table_cell), Paragraph("Rain &ge; 201.1 mm", table_cell), Paragraph("0.5000", table_cell), Paragraph("[0.5000, 0.5000]", table_cell), Paragraph("0.00%", table_cell), Paragraph("100.00%", table_cell)],
+        [Paragraph("Rainfall 24h Only", table_cell), Paragraph("Univariate Score", table_cell), Paragraph("Continuous rain_24h", table_cell), Paragraph("0.5100", table_cell), Paragraph("[0.3826, 0.6380]", table_cell), Paragraph("N/A", table_cell), Paragraph("N/A", table_cell)],
+        [Paragraph("Rainfall 3d Only", table_cell), Paragraph("Univariate Score", table_cell), Paragraph("Continuous rain_3d", table_cell), Paragraph("0.4756", table_cell), Paragraph("[0.3491, 0.6057]", table_cell), Paragraph("N/A", table_cell), Paragraph("N/A", table_cell)],
+        [Paragraph("Rainfall 7d Only", table_cell), Paragraph("Univariate Score", table_cell), Paragraph("Continuous rain_7d", table_cell), Paragraph("0.5375", table_cell), Paragraph("[0.4098, 0.6654]", table_cell), Paragraph("N/A", table_cell), Paragraph("N/A", table_cell)],
+        [Paragraph("Soil Moisture Only (0-7 cm)", table_cell), Paragraph("Univariate Score", table_cell), Paragraph("Continuous soil_moist", table_cell), Paragraph("0.4613", table_cell), Paragraph("[0.3356, 0.5919]", table_cell), Paragraph("N/A", table_cell), Paragraph("N/A", table_cell)],
+        [Paragraph("Terrain + Weather (LR)", table_cell_bold), Paragraph("Multivariate ML", table_cell_bold), Paragraph("15 km Spatial CV", table_cell_bold), Paragraph("0.6425", table_cell_bold), Paragraph("[0.5261, 0.7730]", table_cell_bold), Paragraph("70.00%", table_cell_bold), Paragraph("58.62%", table_cell_bold)],
+        [Paragraph("Terrain + Weather (RF)", table_cell_bold), Paragraph("Multivariate ML", table_cell_bold), Paragraph("15 km Spatial CV", table_cell_bold), Paragraph("0.5834", table_cell_bold), Paragraph("[0.4590, 0.7037]", table_cell_bold), Paragraph("65.00%", table_cell_bold), Paragraph("53.12%", table_cell_bold)],
+    ]
+    t_thresh = Table(thresh_table_data, colWidths=[110, 70, 80, 54, 70, 60, 60], repeatRows=1)
+    t_thresh.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 2),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+    ]))
+    story.append(t_thresh)
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(
+        "<b>Key Geotechnical Takeaways:</b> (1) Univariate weather cannot separate monsoon events (24h rain AUC = 0.5100, 3d rain AUC = 0.4756); both failure and non-failure days experience heavy rainfall. (2) The Caine threshold gives 100% specificity but misses 85% of events because ~10 km reanalysis smooths out localized convective cloudbursts. (3) Multivariate ML outperforms rainfall-only models (0.6425 vs 0.5100) because it incorporates static topographic slope and curvature susceptibility.",
+        body_style,
+    ))
+    story.append(Spacer(1, 4))
+
     # SECTION 9
     story.append(Paragraph("9. System Architecture", h1_style))
     story.append(Paragraph(
@@ -357,10 +396,32 @@ def create_report_pdf(output_path: Path):
     story.append(Paragraph("10. Backend REST API Endpoints & Request Verification", h1_style))
     story.append(Paragraph(
         "• <code>GET /health</code> — Verifies ML model readiness and returns the list of all 11 loaded features.<br/>"
-        "• <code>POST /api/v1/predict/point</code> — Single-point risk evaluation across all 11 features. <b>Does it look up DEM dynamically? NO.</b> The caller must supply feature values in the request payload; missing required fields return a 422 error.<br/>"
-        "• <code>POST /api/v1/simulate/storm</code> — Batch corridor storm scenario simulation injecting rainfall increments across highway stations.",
+        "• <code>POST /api/v1/predict/point</code> — Single-point risk evaluation across all 11 features. The caller must supply feature values in the request payload.<br/>"
+        "• <code>POST /api/v1/simulate/storm</code> — Batch corridor storm scenario simulation injecting rainfall increments across highway stations.<br/>"
+        "• <code>POST /api/v1/route/analyze</code> — Dynamic highway route analysis with runtime DEM extraction and danger interval segmentation.<br/>"
+        "• <code>POST /api/v1/feedback</code> & <code>POST /api/v1/alerts/email/send</code> — Field hazard observation ingestion and modular emergency email dispatch.",
         body_style,
     ))
+    story.append(Spacer(1, 2))
+
+    storm_table_data = [
+        [Paragraph("Scenario Delta", table_cell_bold), Paragraph("Tiers (G / Y / R)", table_cell_bold), Paragraph("High Risk Sectors Count & Names", table_cell_bold)],
+        [Paragraph("+0 mm (Baseline)", table_cell), Paragraph("3 / 12 / 0", table_cell), Paragraph("0 High (12 Watch, 3 Normal: Teesta Bazaar, Rangpo, Penlong La)", table_cell)],
+        [Paragraph("+50 mm", table_cell), Paragraph("2 / 6 / 7", table_cell), Paragraph("7 High (29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam, Tadong Mile 6)", table_cell)],
+        [Paragraph("+100 mm", table_cell), Paragraph("2 / 7 / 6", table_cell), Paragraph("6 High (29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam)", table_cell)],
+        [Paragraph("+200 mm", table_cell), Paragraph("2 / 7 / 6", table_cell), Paragraph("6 High (29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam)", table_cell)],
+        [Paragraph("+300 mm", table_cell), Paragraph("2 / 7 / 6", table_cell), Paragraph("6 High (29th Mile, Likhipir, Melli, Mining Ground, Singtam, Martam)", table_cell)],
+    ]
+    t_storm = Table(storm_table_data, colWidths=[90, 85, 329], repeatRows=1)
+    t_storm.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+    ]))
+    story.append(t_storm)
+    story.append(Spacer(1, 4))
 
     # SECTION 11
     story.append(Paragraph("11. Dashboard User Interface Guide & Backend Verification", h1_style))
@@ -383,7 +444,9 @@ def create_report_pdf(output_path: Path):
         "4. <i>Rule-Based Benchmark Labels:</i> The 1,500-sample training table assigns ground-truth labels via synthetic geophysical heuristics.<br/>"
         "5. <i>Uncalibrated Prototype Thresholds:</i> Decision boundaries (0.25 Yellow, 0.70 Red) are research prototypes requiring field calibration.<br/>"
         "6. <i>2000-Era DEM:</i> SRTM 30m data reflects ground elevation from 2000 and does not capture post-2000 highway widening cuts.<br/>"
-        "7. <i>No Real-Rainfall Validation:</i> Model dynamic rainfall triggers have not been validated against in-situ sensor telemetry during actual failure events.",
+        "7. <i>No Real-Rainfall Validation:</i> Model dynamic rainfall triggers have not been validated against in-situ sensor telemetry during actual failure events.<br/><br/>"
+        "<b>Model Behavior Note on Rainfall Monotonicity & Tier Sensitivity:</b> The Random Forest is not monotonic in rainfall. In the current station set the number of High stations is 7 at +50 mm and 6 at +100 mm. Stations whose score is close to a tier threshold can change tier with small input changes.<br/><br/>"
+        "<b>Live Weather Sensitivity Quirk:</b> In sensitivity tests, replacing a near-zero live 24-hour rainfall with the training median slightly LOWERS the score at several stations, i.e. the model gives dry weather a slightly higher score than moderate rain at those stations. This is a quirk of the synthetic-label model near the edge of the training range. The cause was not verified. Because of this, Watch in dry weather must not be read as 'terrain only' or as a rainfall effect.",
         body_style,
     ))
 

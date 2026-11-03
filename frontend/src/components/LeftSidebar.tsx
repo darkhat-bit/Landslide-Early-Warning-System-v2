@@ -6,9 +6,10 @@ import {
   MapPin,
   Radio
 } from 'lucide-react';
-import { CorridorPointData, CalculatedRisk } from '../data/corridorData';
+import { CorridorPointData, CalculatedRisk, LiveStationData, CorridorTimeline } from '../data/corridorData';
 import { AlertItem } from '../types/alert';
 import { AlertInbox } from './AlertInbox';
+import { evaluateStationReliability, isBorderlineScore } from '../data/trainingRanges';
 
 interface LeftSidebarProps {
   onBackToHome: () => void;
@@ -27,6 +28,13 @@ interface LeftSidebarProps {
   selectedAlert: AlertItem | null;
   onSelectAlert: (alert: AlertItem | null) => void;
   onOpenHelp: () => void;
+  rainfallDelta?: number;
+  operationMode?: 'SCENARIO' | 'LIVE';
+  onModeChange?: (mode: 'SCENARIO' | 'LIVE') => void;
+  liveWeatherStatus?: string;
+  liveWeatherNotice?: string;
+  corridorTimeline?: CorridorTimeline | null;
+  liveStationDataMap?: Map<string, LiveStationData>;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -45,7 +53,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onMarkAllRead,
   selectedAlert,
   onSelectAlert,
-  onOpenHelp
+  onOpenHelp,
+  rainfallDelta = 0,
+  operationMode = 'SCENARIO',
+  onModeChange,
+  liveWeatherStatus,
+  liveWeatherNotice,
+  corridorTimeline,
+  liveStationDataMap
 }) => {
   const [activeTab, setActiveTab] = useState<'STATIONS' | 'ALERTS'>('STATIONS');
 
@@ -83,6 +98,56 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   return (
     <aside className="w-80 md:w-88 h-full flex flex-col bg-white border-r border-gray-200 text-sm shrink-0 z-10 shadow-sm">
+      {/* ── Mode Switcher (Scenario vs Live Conditions) ───────── */}
+      <div className="p-2 border-b border-gray-200 bg-gray-100 flex gap-1 shrink-0">
+        <button
+          onClick={() => onModeChange?.('SCENARIO')}
+          className={`flex-1 py-1.5 px-2 rounded text-xs font-semibold transition-colors cursor-pointer text-center ${
+            operationMode === 'SCENARIO'
+              ? 'bg-white border border-gray-300 text-gray-900 shadow-xs'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          What-if rain test
+        </button>
+        <button
+          onClick={() => onModeChange?.('LIVE')}
+          className={`flex-1 py-1.5 px-2 rounded text-xs font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+            operationMode === 'LIVE'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Live weather</span>
+        </button>
+      </div>
+
+      {/* Offline cached notification banner (Item 6) */}
+      {operationMode === 'LIVE' && liveWeatherNotice && liveWeatherNotice.includes('cached') && (
+        <div className="p-2 bg-amber-50 border-b border-amber-300 text-xs text-amber-900 flex items-start gap-1.5 shrink-0">
+          <div className="w-2 h-2 rounded-full bg-amber-500 mt-1 shrink-0" />
+          <div className="text-[11px] leading-snug font-medium">
+            {liveWeatherNotice}
+          </div>
+        </div>
+      )}
+
+      {/* Live mode corridor summary banner */}
+      {operationMode === 'LIVE' && (
+        <div className="p-2.5 bg-blue-50/80 border-b border-blue-200 text-xs text-blue-950 space-y-1 shrink-0">
+          <div className="font-semibold text-blue-900 flex items-center justify-between">
+            <span>72h Corridor Risk Outlook:</span>
+            <span className="text-[10px] text-blue-700 font-normal">Open-Meteo (~10 km)</span>
+          </div>
+          <p className="text-[11px] leading-snug font-medium text-blue-900">
+            {corridorTimeline?.corridor_summary_sentence || 'Evaluating forward corridor risk...'}
+          </p>
+          <div className="text-[10px] text-blue-800 leading-tight">
+            In dry weather, steep stations can still show Watch because the model weights terrain heavily and the Watch threshold (0.25) was tuned for high recall. Watch here means keep monitoring, not that a landslide is expected.
+          </div>
+        </div>
+      )}
       {/* ── Mode Switcher Tabs ────────────────────────────────── */}
       <div className="flex border-b border-gray-200 bg-gray-50/70">
         <button
@@ -218,6 +283,21 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 const isRed = r?.risk_tier === 'RED';
                 const isYellow = r?.risk_tier === 'YELLOW';
                 const tierLabel = isRed ? 'High' : isYellow ? 'Watch' : 'Low';
+                const stationInputs = (operationMode === 'LIVE' && r)
+                  ? {
+                      ...point,
+                      rain_24h_mm: r.rain_24h_mm_adjusted,
+                      rain_3d_mm: r.rain_3d_mm_adjusted,
+                      rain_7d_mm: r.rain_7d_mm_adjusted ?? point.rain_7d_mm,
+                      soil_moisture_pct: r.soil_moisture_pct_adjusted ?? point.soil_moisture_pct,
+                    }
+                  : point;
+                const rel = evaluateStationReliability(
+                  stationInputs,
+                  operationMode === 'LIVE' ? 0 : rainfallDelta,
+                  operationMode === 'LIVE'
+                );
+                const isBorderline = r ? isBorderlineScore(r.failure_probability) : false;
 
                 return (
                   <div
@@ -241,6 +321,29 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                           {isRed ? '◆ High' : isYellow ? '▲ Watch' : '● Low'}
                         </span>
                         <span className="font-semibold text-gray-900 truncate">{point.name}</span>
+                        {isBorderline && (
+                          <span
+                            className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-300 shrink-0"
+                            title="Score is close to a tier boundary, so the tier can change with small input changes."
+                          >
+                            Borderline
+                          </span>
+                        )}
+                        {rel.isWithinTrainingRange ? (
+                          <span
+                            className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0"
+                            title="All inputs within empirical training dataset distribution"
+                          >
+                            In Range
+                          </span>
+                        ) : (
+                          <span
+                            className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300 shrink-0"
+                            title={`Outside training range: ${rel.outOfRangeFeatureLabels.join(', ')}`}
+                          >
+                            Outside Range ({rel.outOfRangeFeatures.length})
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-500 truncate">{point.section}</div>
                       <div className="text-[11px] text-gray-400">

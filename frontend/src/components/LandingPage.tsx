@@ -10,6 +10,7 @@ import {
 
 import { ThemeSelector } from './ThemeSelector';
 import { ThemeId } from '../utils/theme';
+import { AboutLimitationsModal } from './AboutLimitationsModal';
 
 interface LandingPageProps {
   onLaunchConsole: () => void;
@@ -23,6 +24,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onThemeChange
 }) => {
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col font-sans theme-container">
@@ -50,6 +52,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 onThemeChange={onThemeChange}
               />
             )}
+
+            <button
+              onClick={() => setShowAboutModal(true)}
+              className="px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium text-sm flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Info className="w-4 h-4 text-amber-600" />
+              <span>About & Limitations</span>
+            </button>
 
             <button
               onClick={onLaunchConsole}
@@ -233,7 +243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-1">
                 <div className="font-semibold text-slate-800">About the machine learning model:</div>
                 <p>
-                  Trained on 1,000 geological data points with a Random Forest classifier (test ROC-AUC: 0.7642).
+                  Trained on 1,500 scenario data points backed by NASA SRTM 30m DEM terrain with a Random Forest classifier (test ROC-AUC: 0.7642).
                   Risk scores represent the proportion of decision trees flagging a hazard, not a true calibrated probability.
                 </p>
               </div>
@@ -244,8 +254,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* ── Footer ────────────────────────────────────────────── */}
       <footer className="p-4 bg-white border-t border-slate-200 text-center text-slate-500 text-xs">
-        Prototype. Rainfall is simulated. Not for real emergency use.
+        Prototype. The model was trained on synthetic labels. Not an official warning. Check IMD, GSI, district authorities and local road status.
       </footer>
+      <AboutLimitationsModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
     </div>
   );
 };

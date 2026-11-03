@@ -1,0 +1,9 @@
+increment_mm,station_id,station_name,failure_probability,risk_tier,nearest_threshold,threshold_diff,is_borderline
+0,pt-10,Ranipool Bridge Corridor,0.2587,YELLOW,0.25 (Yellow),0.0087,True
+0,pt-12,Deorali Ridge Slide Zone,0.2544,YELLOW,0.25 (Yellow),0.0044,True
+0,pt-13,Gangtok Zero Point Ridge,0.265,YELLOW,0.25 (Yellow),0.015,True
+0,pt-14,Penlong La Escarpment,0.2453,GREEN,0.25 (Yellow),0.0047,True
+50,pt-11,Tadong Mile 6 Escarpment,0.7159,RED,0.70 (Red),0.0159,True
+100,pt-1,29th Mile Landslide Zone,0.7181,RED,0.70 (Red),0.0181,True
+200,pt-1,29th Mile Landslide Zone,0.7089,RED,0.70 (Red),0.0089,True
+300,pt-1,29th Mile Landslide Zone,0.7089,RED,0.70 (Red),0.0089,True

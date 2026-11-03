@@ -4,7 +4,7 @@ import { MapConsole } from './components/MapConsole';
 import { getInitialTheme, applyTheme, ThemeId } from './utils/theme';
 
 export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'LANDING' | 'CONSOLE'>('LANDING');
+  const [currentView, setCurrentView] = useState<'LANDING' | 'CONSOLE'>(() => (typeof window !== 'undefined' && window.location.hash.startsWith('#console')) ? 'CONSOLE' : 'LANDING');
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(getInitialTheme);
 
   // Initialize and apply theme on mount
@@ -15,7 +15,7 @@ export const App: React.FC = () => {
   // Handle URL hash changes (#console vs #home)
   useEffect(() => {
     const handleHashChange = () => {
-      if (window.location.hash === '#console') {
+      if (window.location.hash.startsWith('#console')) {
         setCurrentView('CONSOLE');
       } else {
         setCurrentView('LANDING');
